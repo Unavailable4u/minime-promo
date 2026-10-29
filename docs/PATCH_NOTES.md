@@ -216,3 +216,84 @@ CHANGED  docs/PATCH_NOTES.md
 - Patch 03 may refine `FOCUS_RECTS` to the real geometry; if it does it must edit `src/config/focus.ts` (the camera, callouts and spotlight all read from it).
 - Scene patches: only export `SN_CAMERA`/`SN_CURSOR`; author frames with `f()`/`beat()`/`sec()`. A move that must LAND on a beat has to start `CAMERA_SETTLE_FRAMES` (25) frames earlier; leave room for callouts with extra `padding` on the chip's side.
 - Keep `<Cursor/>` inside `<Camera>` and every other overlay in `screen`; do not render FX inside a `<Sequence>` without passing `frame=`.
+
+---
+
+## PATCH 03 — App shell UI (nav, sidebar, chat box, composer)
+
+### Files created / changed
+```
+CREATED  src/ui/shellLayout.ts      src/ui/AppWindow.tsx     src/ui/TopNav.tsx       src/ui/ChatSidebar.tsx
+CREATED  src/ui/ChatBox.tsx         src/ui/Composer.tsx      src/ui/ModeMenu.tsx
+CREATED  src/ui/UserMessage.tsx     src/ui/AssistantMessage.tsx
+CREATED  src/lib/color.ts
+CREATED  src/dev/DevShell.tsx       (dev-only composition, 8 states x 60 f = 480 f)
+CHANGED  src/config/focus.ts        (chat-box rectangles re-derived from the real geometry, see below)
+CHANGED  src/config/copy.ts         (+ UI_TEXT.error = 'Error')
+CHANGED  src/config/theme.ts        (+ META_COLORS)
+CHANGED  src/Root.tsx               (registers DevShell under the DEV-ONLY comment; final compositions untouched)
+CHANGED  docs/PATCH_NOTES.md
+```
+
+### Public API
+
+**src/ui/shellLayout.ts** (single source of truth for sizes; all rectangles are in the UI's LOGICAL 1440x810 space, origin = top-left of the app window)
+- `SHELL {headerH 48, sidebarW 256, panelMaxW 480, paneHeaderH 40, pad 16, gap 8, searchStripH 42, searchInputH 26, sidebarIconBox 22, sidebarIconGap 2, sidebarRowH 33, projectHeaderH 28, reviewW 108, reviewH 26, controlH 41, attachW 34, modeW 112, sendW 84, textareaLine 22.75, attachRowH 30, menuW 224, menuBorder 2, menuGap 8}`
+- `type Rect {x, y, w, h}`, `rectCenter(rect): {x, y}`
+- `shellLayout({panelWidth?, attachmentRow?, draftLines?}): ShellLayout` returns `window, header, sidebar, sidebarHeader, newChatButton, newFolderButton, collapseButton, searchField, searchClear, sidebarListTop, chatBox, chatHeader, reviewHires, messageList, composer, attachButton, modeButton, textarea, sendButton, attachmentRow, modeMenu, modeMenuRow(index), panel`. `attachmentRow` is the RAW 0..1 chip `appear` value (eased the same way as <Composer/>).
+- `textareaHeight(lines)`, `MODE_MENU_ROW_HEIGHTS = [52, 52, 52, 52, 68]`, `MODE_MENU_HEIGHT` (278)
+
+**src/ui/AppWindow.tsx** `<AppWindow header sidebar panel? panelWidth?=0 rimAngle?=0 rimIntensity?=0 style?>{chatBox}</AppWindow>`: 1440x810, radius 14, hairline border drawn as an OVERLAY (so content boxes keep exact sizes), deep shadow, optional moving crimson rim light. The Working Panel is rendered at its full 480 px, anchored to the right edge and clipped by `panelWidth` (drawer reveal, no squashing). Position it with `left: UI_OFFSET.x, top: UI_OFFSET.y` or inside Camera world space.
+
+**src/ui/TopNav.tsx** `<TopNav activeTab?='Chat' sweep?: number | null sweepStrength?=1 tabs? />`. `sweep` 0..1 travels a soft light over the INACTIVE tab names (outro teaser). It never activates a tab.
+
+**src/ui/ChatSidebar.tsx** `<ChatSidebar topRows projects rows activeId? searchText? searchFocus? searchCaret? hover? pressed? />`
+- `SidebarRow {id, title, visible?=1, highlight?: {start, end}, hovered?, caret?}`, `SidebarProject {id, name, visible?, highlight?, rows}`, `SidebarHighlight`, `SidebarTarget = 'new-chat' | 'new-folder' | 'collapse' | 'search' | 'clear'`
+- `visible` (0..1) collapses a row's height AND fades/slides it, so the live filter, the new-chat slide-in and the filter-clear all animate by driving `visible`. `title` takes the partially typed string; `caret` draws the typing caret.
+
+**src/ui/ChatBox.tsx** `<ChatBox composer reviewHires?=0 reviewHover? reviewPressed? scrollY?=0 emptyState? >{rows}</ChatBox>`. Message list = px 16 py 24; `scrollY` shifts the column up (translateY(-scrollY)); `emptyState` shows a faint mark. Width is whatever AppWindow leaves (1184 px panel closed, 704 px panel open).
+
+**src/ui/Composer.tsx** `<Composer frame draft draftLines? caretVisible? focus? mode menu? sendState? sendEnable? hover? pressed? attachments? placeholder? />`
+- `ComposerTarget = 'attach' | 'mode' | 'textarea' | 'send'`, `SendState = 'send' | 'pause' | 'resume'`, `ComposerAttachment {id, name, appear, done}`, `ComposerProps`
+- `menu: {openProgress, hoveredIndex?} | null` drives both the dropdown and the chevron rotation. Send is 40% opacity with an empty draft (`sendEnable` overrides); Pause and Resume are always 100%.
+- Attachment chips: spinner (12 deg per frame) while `done < 1`, drawn-on SVG check when `done` reaches 1.
+
+**src/ui/ModeMenu.tsx** `<ModeMenu openProgress hoveredIndex? selected />`, `ModeIcon`, `MODE_MENU_ROW_STAGGER` (3 f), `MODE_MENU_ROW_FRAMES` (10 f), `MODE_MENU_OPEN_FRAMES` (22 f). Drive `openProgress = clamp01((frame - openFrame) / MODE_MENU_OPEN_FRAMES)` (reverse for closing). Beast gets a crimson glow while hovered. Rendered by <Composer/>; do not mount it yourself.
+
+**src/ui/UserMessage.tsx** `<UserMessage text progress?=1 chips? maxWidthPct?=80 />`
+
+**src/ui/AssistantMessage.tsx** `<AssistantMessage frame? progress?=1 view?='message'|'working' avatar?='static'|'thinking' meta? badgeGlow?=0 workingElapsed? caret? maxWidthPct?=80>{body}</AssistantMessage>`
+- `type AssistantMeta = {kind:'routing'} | {kind:'tier', tier: 0|1|2|3, ok?, elapsed?, morph?} | {kind:'paused', elapsed?} | {kind:'error', elapsed?}`
+- `morph` 0..1 cross-masks "routing…" into the tier label and blends the dot from neutral to the tier color (Tier 3 reveal). `badgeGlow` 0..1 is a soft tier-colored bloom behind the badge. `elapsed` is a ready-made string; the script (patch 07) owns the counting.
+- `view="working"` = avatar + dim "Working… · 3s", no bubble (avatar defaults to `thinking`).
+- Exports `ASSISTANT_AVATAR_SIZE` (26).
+
+**src/lib/color.ts**: `parseColor`, `lerpColor(from, to, t)`, `withAlpha(color, alpha)`, `type Rgba`. CSS transitions are forbidden, so every state blend (Review hires toggle, tier dot, search focus) goes through `lerpColor`.
+
+**src/dev/DevShell.tsx**: `DevShell`, `DEV_SHELL_FRAMES` (480), `STATE_FRAMES` (60), `STATE_NAMES`. State = floor(frame / 60): 0 empty chat, 1 chat with messages, 2 mode menu open, 3 search filter, 4 Review hires ON, 5 thinking + panel open (stand-in panel), 6 meta variants, 7 anchors (layout rectangles over the real DOM).
+
+**src/config/theme.ts** + `META_COLORS {paused #fcd34d, error #f87171, routing, routingDot, separator}`. **src/config/copy.ts** + `UI_TEXT.error`.
+
+### Decisions and conventions
+- Clickable controls have FIXED sizes (`SHELL`), so cursor targets never move when a label changes (Auto -> Expert, Send -> Pause). The text inside is centered/spaced to look natural. Patch 07 and the scene patches take cursor/callout anchors from `shellLayout()`, never from measured DOM.
+- `focus.ts` was refined: the real chat box is full-width with a LEFT-aligned message column (content starts at x 272) and a full-width composer, so Patch 02's centered-column guesses changed: `composer {256,736,1184,74}`, `messageList {256,88,1184,648}`, `assistantBadge {268,164,380,40}` (first assistant message under a ONE-line user prompt; a wrapped two-line prompt pushes it down about 23 px), `modeMenu {314,467,224,327}` (menu + the button under it), `hiresCard {272,166,720,380}` (estimate until patch 05). `graph` and `stepCards` are unchanged estimates (patches 05/06 refine them). Verified: DevShell state 7 draws `shellLayout()` rectangles over the real DOM and every control lines up.
+- Composer, mode menu and chips are all driven by props; nothing reads the frame to decide story. The only frame-reading pieces are the spinner rotation (Composer `frame`), the thinking avatar and the caret pulse (AssistantMessage `frame`).
+- Attachment chip row height is `attachRowH * signatureEase(max appear)`. The composer grows upward as chips appear, which moves every composer anchor (`shellLayout({attachmentRow})` gives the new rectangles).
+- Hairline window border and rim light are overlays; they never change content geometry.
+- Mode menu row heights are hard-coded because Beast's hint wraps to two lines at w 224. If a hint in `copy.ts` changes, re-check state 2 in DevShell and update `MODE_MENU_ROW_HEIGHTS`.
+- Arrows, chevrons, checks, pause/play are lucide icons or inline SVG, never text glyphs.
+
+### Verified
+- `npx tsc --noEmit` passes (strict).
+- DevShell stills rendered with a sandbox Chromium for all 8 states (frames 30, 90, 150, 210, 270, 330, 390, 450) plus 335 and 355: empty chat, messages + Tier 0 meta row, mode menu (5 rows, Beast wraps), live search filter with highlight, Review hires ON, thinking avatar + Tier 3 morph + bloom + Pause button, all five meta variants + Working row, and the anchor overlay.
+
+### Known issues
+- The Working Panel in DevShell state 5 is a stand-in (header only); the real one is patch 05.
+- The streaming caret is an inline-block after the body, so it drops to its own line under a block element such as a list. Patch 04's Markdown should draw its own caret at the end of the last token and pass `caret={false}`.
+- Hover/press styling exists for sidebar icons, search, composer controls and Review hires; sidebar row hover is a prop (`hovered`). Patch 07's app state must set them from the cursor `hover` target.
+- Not checked: motion in the Studio (stills only).
+
+### Warnings for the next patches
+- Patch 04 (Markdown) should render inside <AssistantMessage/>'s body and own the streaming caret.
+- Patch 05 (WorkingPanel, StepCard, HireReview) renders inside the `panel` slot of <AppWindow/> at 480 px wide and refines `FOCUS_RECTS.hiresCard`, `graph`, `stepCards`.
+- Patch 07: build `ComposerProps`, `SidebarRow[]` etc. from the script; use `MODE_MENU_OPEN_FRAMES` for the menu, `shellLayout()` for anchors, and `lerpColor` for any state blend.

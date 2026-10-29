@@ -139,6 +139,7 @@ export const UI_TEXT = {
   working: 'Working…',
   routing: 'routing…',
   paused: 'Paused',
+  error: 'Error',
   ok: 'ok',
   newChatTitle: 'New Chat',
   traceLink: 'View trace in Langfuse',

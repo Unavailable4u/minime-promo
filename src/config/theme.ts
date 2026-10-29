@@ -88,6 +88,18 @@ export const TIER_COLOR_BY_KEY = {
 } as const;
 export type TierKey = keyof typeof TIER_COLOR_BY_KEY;
 
+/**
+ * Colors of the assistant message meta row that are not tier colors.
+ * paused = amber-300, error = red-400 (both from the reference), routing = the neutral "routing…" state.
+ */
+export const META_COLORS = {
+  paused: '#fcd34d',
+  error: '#f87171',
+  routing: '#a3a3a3', // neutral-400 label while the Inspector has not picked a tier yet
+  routingDot: '#737373', // neutral-500
+  separator: '#525252', // neutral-600: the "· ok" and "· 41s" parts
+} as const;
+
 // ----------------------------------------------------------------------- edges
 export const EDGE_COLORS = {
   plan: '#6b7280',
