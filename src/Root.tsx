@@ -1,5 +1,6 @@
 import React from 'react';
 import {Composition} from 'remotion';
+import {DevBrandSheet} from './dev/DevBrandSheet';
 import {MiniMePromo} from './MiniMePromo';
 import {PreviewScale} from './PreviewScale';
 import {FPS, STAGE, TOTAL_FRAMES} from './config/timeline';
@@ -31,6 +32,19 @@ export const RemotionRoot: React.FC = () => {
         fps={FPS}
         width={STAGE.width / 2}
         height={STAGE.height / 2}
+      />
+
+      {/*
+        DEV-ONLY compositions (not part of the film). Each dev patch adds one here.
+        Remove or keep them out of the final deliverable list in patch 17.
+      */}
+      <Composition
+        id="DevBrandSheet"
+        component={DevBrandSheet}
+        durationInFrames={150}
+        fps={FPS}
+        width={STAGE.width}
+        height={STAGE.height}
       />
     </>
   );

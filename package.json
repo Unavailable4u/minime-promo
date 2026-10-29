@@ -8,6 +8,7 @@
   },
   "scripts": {
     "studio": "remotion studio src/index.ts",
+    "assets": "node scripts/fetch-assets.mjs",
     "sfx": "node scripts/make-sfx.mjs",
     "check": "node scripts/check-stills.mjs",
     "render": "node scripts/render.mjs",
