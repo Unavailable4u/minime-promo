@@ -57,6 +57,10 @@ export const FOCUS_RECTS = {
   hiresCard: {x: 272, y: 166, w: 720, h: 380},
   /** The entire app window. */
   fullWindow: {x: 0, y: 0, w: 1440, h: 810},
+  // ---- PATCH 09 (S2 Instant) ----
+  instantComposer: {x: 256, y: 620, w: 1184, h: 160},
+  instantChat: {x: 10, y: 130, w: 1380, h: 460},
+  instantAnswer: {x: 250, y: 150, w: 720, h: 340},
 } as const satisfies Record<string, FocusRect>;
 
 export type FocusName = keyof typeof FOCUS_RECTS;

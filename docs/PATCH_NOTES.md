@@ -604,3 +604,62 @@ CHANGED  docs/PATCH_NOTES.md
 - `S6_WINDOW`, when it is non-null, takes over the window style from f1500. At f1499 the window is the bare identity style (`{opacity: 1}`), so start the S6 transform from the identity pose to avoid a jump.
 - `S6_GRID` is combined with `S0_GRID` by `max`. Patch 15 only needs to return its own 0..1 fade.
 - To add an overlay that must outlive its scene by more than 30 f, edit its `to` in `SCENE_OVERLAYS` (src/scenes/index.ts).
+
+---
+
+## PATCH 09 — S2 Instant (f240-479)
+
+### Files created / changed
+```
+REPLACED src/scenes/S2Instant.tsx   (the patch-08 stub is gone: real camera, cursor and overlay)
+CHANGED  src/config/focus.ts        (+ FOCUS_RECTS instantComposer, instantChat, instantAnswer)
+CHANGED  docs/PATCH_NOTES.md
+```
+`src/scenes/index.ts`, `src/MiniMePromo.tsx` and the app / fx files are NOT changed. The three exports keep their patch-08 names, so the barrel and the master timeline pick the scene up unchanged.
+
+### Public API
+
+**src/scenes/S2Instant.tsx**: `S2Instant` (overlay, `SceneOverlayProps`), `S2_CAMERA: CameraKeyframe[]`, `S2_CURSOR: CursorWaypoint[]`. Every number is authored through `f()` or taken from `S2` in `script.ts`.
+
+Camera (frame = the frame the move STARTS; the camera spring settles about 25 f later):
+
+| start | target | padding | scaleBias | rotX / rotY | zoom on the 1080p frame (14 px chat text) |
+|---|---|---|---|---|---|
+| f240 | `instantComposer` | 72 | 1.07 | 1.5 / -2 | 1.60 -> 22.5 px |
+| f322 (`S2.userIn - 4`) | `messageList` | 72 | 1.06 | 0 / 1.5 | 1.53 -> 21 px |
+| f368 | `instantChat` | 63 | - | 0 / 1 | 1.30 -> 18.2 px |
+| f405 | `instantAnswer` | 110 | 0.66 | - / 1.5 | 1.55 |
+| f420 | `instantAnswer` | 110 | 0.755 | - / 2.5 | 1.78 -> 25 px (the slow push) |
+| f455 | `instantChat` | 63 | - | 0 / 0 | 1.30 (the pull-back; this is the pose S2 ends on) |
+
+Cursor (logical UI px, `CursorWaypoint`): enters at f240 from below-right (1404, 838, off the window), clicks the textarea at `S2.focus` (f258) at 66% of its width / vertical center (hover `'textarea'`, focus ring + ripple come from the app), slides to (1118, 690) at f300 and to (900, 330) at f348 where it rests through f479.
+
+Overlay (all inside the camera's SCREEN layer, global `frame` prop):
+- `Caption` `CAPTIONS.instant` ("Simple asks? Instant.") from f300 to `SCENES.S2.end - f(5)`.
+- `KeyCap` starts at `S2.enter - KEYCAP_ENTER_FRAMES` (f320) so the press lands on the Enter at f324 (6 f hold); anchored to the Send button's horizontal center, 36 px above its top edge, `space: 'ui'` (it follows the camera, so it stays attached while the composer slides away).
+- `Callout` `CALLOUTS.answeredInstantly` from f410 to f455, anchored to `anchorsAt(frame).instantBadge` (x + `BADGE_TEXT_END` 182, vertical center, `space: 'ui'`), side `right`, distance 96, shift -30. It renders nothing while the badge anchor is null.
+
+**src/config/focus.ts**: `instantComposer {256, 620, 1184, 160}`, `instantChat {10, 130, 1380, 460}`, `instantAnswer {250, 150, 720, 340}` (logical UI px).
+
+### Decisions and conventions
+- Camera targets can only be named `FOCUS_RECTS`, and none of the existing ones gave the S2 shots, hence the three new rects (measured from `layoutAt` / `anchorsAt` of the S2 frames).
+- Deviations from the guide's prompt: (1) the tilt up to the chat starts at f322, not f326: the spring is only 34% done after 4 f, so starting at f326 slid the user bubble in off-screen. (2) The caption rises at f300 (a beat), into the empty stage below the composer while the prompt types. (3) `messageList` zoom is 1.53 (guide said about 1.35) so the bubble text is 21 px. (4) The key cap is anchored to the Send button in UI space instead of a fixed stage point.
+- Legibility: typing (22.5 px) and the answer push (25 px) meet the 22 px bar. The wide shot (`instantChat`, 18.2 px) is deliberately below it: fitting the sidebar title and the right-aligned user bubble together forces about 1.30; at 1.4 the bubble is cropped mid-sentence. The 22 px text moments are the ones that matter (typing, answer, badge).
+- The sidebar auto-title (f374-420) stays in view in the periphery of the wide shot; the depth of field softens it (it is driven by `ChatApp`, the scene does not touch it).
+
+### Verified
+- `npx tsc --noEmit` passes (strict).
+- Stills rendered with the sandbox Chromium at f258, 290, 325, 333, 336, 352, 362, 395, 420, 432, 470: legible composer close-up with focus ring and click ripple, the key cap on the Send button, Tier 0 badge + streaming answer + caption, the wide shot with sidebar title typing, the callout wiping in from its dot after "1.2s", the pull-back. At f333 (worst point of the tilt) the composer clears the caption.
+- The whole S2 range (f236-480) rendered at low resolution with no warnings or errors. f420 rendered twice is byte-identical (MD5).
+- Camera numbers checked numerically: no jumps at the keyframe handoffs.
+
+### Known issues
+- Motion was not scrubbed in the Studio and no contact sheet was made (the ffmpeg filter step failed on quoting): stills and numbers only. Scrub f240-479 once.
+- `BADGE_TEXT_END` (182) is a hard-coded offset into the badge rect to land the callout dot after "1.2s". If `META_TEXT.instantElapsed` or the badge layout changes, re-tune it.
+- The new `instant*` rects are static. They were measured at the S2 layout; if the S2 prompt / answer text or row heights change, re-run `DevApp` (`measureRows`) and re-check the framing.
+
+### Warnings for the next patches (10+)
+- S2 ends on the `instantChat` pose (padding 63, rotX 0, rotY 0) from its last keyframe at f455, settled by f480. The first S3 keyframe is at f480 (the guide's move back to `composer`), so it starts from that pose.
+- The cursor rests at (900, 330) (UI px) from f348. S3's first waypoint (the composer click at f496) travels from there.
+- `S2.nudge` scrolls the chat up 20 px permanently over f455-479, so S3 row positions are shifted: use `layoutAt` / `anchorsAt`, not static rects, for chat rows.
+- The caption ends at `SCENES.S2.end - f(5)` (f474); S3 owns its own caption from f480.
