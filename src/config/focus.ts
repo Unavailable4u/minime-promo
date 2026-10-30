@@ -79,6 +79,16 @@ export const FOCUS_RECTS = {
   teamRecheck: {x: 760, y: 240, w: 680, h: 540},
   /** Pull-back: the whole chat column on the left, the whole panel on the right. */
   teamTwoColumn: {x: 256, y: 88, w: 1184, h: 640},
+  // ---- PATCH 12 (S3c Team: final answer, stat chip, save-template toast) ----
+  /**
+   * The streaming answer. The auto-scroll (script.ts SCROLL) keeps the newest line about 120 px above the composer,
+   * so while the answer streams the newest text always sits in this band (the bubble bottom is at y 555-690 and
+   * the caret about 25 px above it). The band is deliberately taller than the text it follows: one static rect
+   * serves the whole stream and the camera only orbits it. Panel open (chat box x 256..960).
+   */
+  answerStream: {x: 262, y: 216, w: 700, h: 520},
+  /** The top of the Working Panel: routing card, "Save as template" row and the whole routing graph. */
+  teamSave: {x: 760, y: 104, w: 680, h: 430},
 } as const satisfies Record<string, FocusRect>;
 
 export type FocusName = keyof typeof FOCUS_RECTS;

@@ -776,3 +776,59 @@ Overlay (SCREEN layer, global `frame`):
 - S3b ends settled on `teamTwoColumn` (padding 72, rotY 0.5). S3c's first key (about f916) starts from it.
 - The cursor rests on the verifier card at about (1232, 685) from f866. S3c must travel it to "Save as template" (`anchorsAt(frame).saveTemplate`) for the f1056 click.
 - From f916 the answer streams into the chat column (left); the bloom is a screen-layer overlay that ends at f946.
+
+## PATCH 12 — S3c Team: final answer, stat chip, save-template toast (f916-1079)
+
+### Files created / changed
+```
+REPLACED src/scenes/s3/S3c.tsx   (the patch-08 stub is gone: real camera, cursor and overlay)
+CHANGED  src/config/focus.ts     (+ FOCUS_RECTS answerStream, teamSave)
+CHANGED  docs/PATCH_NOTES.md
+```
+`src/scenes/S3Team.tsx`, `src/scenes/index.ts`, `src/MiniMePromo.tsx` and every app / fx / script file are NOT changed. S3c keeps its three patch-08 export names (`S3c`, `S3C_CAMERA`, `S3C_CURSOR`), so the S3 wrapper and the barrel pick it up unchanged. S3 is now complete (a, b and c are real).
+
+### Public API
+**src/scenes/s3/S3c.tsx**: `S3c` (overlay, `SceneOverlayProps`), `S3C_CAMERA: CameraKeyframe[]`, `S3C_CURSOR: CursorWaypoint[]`.
+
+Camera (frame = the frame the move STARTS; the spring settles about 25 f later):
+
+| start | target | padding | scaleBias | rotX / rotY | zoom on the 1080p frame |
+|---|---|---|---|---|---|
+| f924 | `answerStream` | 72 | 1 | 0 / 1.5 | 1.80 -> chat 25.2 px, table 21.6, code 22.5 |
+| f958 | `answerStream` | 72 | 1.06 | 0.4 / -0.6 | 1.91 -> chat 26.7, table 22.9, code 23.8 (slow push + orbit) |
+| f992 | `answerStream` | 72 | 1.02 | -0.2 / 1.2 | 1.84 -> chat 25.7, table 22.1, code 22.9 (orbit back) |
+| f1030 (`S3.answer.end`) | `teamSave` | 72 | 0.9 | 0.5 / -2 | 1.96 -> panel text 23.5 px (pan to routing card, Save row, whole graph) |
+| f1064 | `teamTwoColumn` | 72 | 1 | 0 / 0.5 | 1.46 (pull-back, still settling when S4 starts at f1080) |
+
+Cursor (logical UI px): it rests on the verifier card from S3b ((1232, 685), off screen while the camera is on the chat), leaves on its own (the travel takes up to 36 f, so about f1010) and arrives over the "Save as template" row on `S3.save.hover` (f1046, hover id `'save'`), then presses it on `S3.save.click` (f1056). The tip is at (saveTemplate.x + 56 / + 62, bottom edge of the row - 3) = about (1034, 205): inside the row (hover and press fire), arrow hanging into the gap above the graph card, so the label stays readable at the click.
+
+Overlay (SCREEN layer, global `frame`):
+- `StatChip` from `S3.stat.from` (f1030) to f1090 (it wipes out from f1080, on the beat), `countFrames` 22, centre (350, 120), font 24. The three numbers finish counting at about f1072.
+- `Callout` `CALLOUTS.everyStepTraced` f1034-f1076 on the focus rect `graph` (side `left`, distance 96). Fully revealed from about f1050, exit from f1066.
+- `Toast` `UI_TEXT.toastSavedTemplate` from `S3.save.toast` (f1060), life 40 (ends f1100), font 26. A small private `SaveToast` projects the Save row through the live camera (`useCameraState` + `projectUiPoint`) and puts the toast's right edge 28 px left of the Working Panel at the height of the row, so it follows the camera during the pull-back.
+
+**src/config/focus.ts**: `answerStream {262, 216, 700, 520}`, `teamSave {760, 104, 680, 430}` (logical UI px).
+
+### Decisions and conventions
+- The auto-scroll keeps the newest line about 120 px above the composer, so the streaming caret always sits in one band (bubble bottom y 555-690, caret about 25 px above it). One static rect (`answerStream`) therefore serves the whole stream; the three keys only orbit and breathe. Checked with stills at f930, 940, 960, 975, 990, 1000, 1010, 1020, 1030: the caret is in frame (lower half) in every one.
+- Deviations from the guide's prompt: (1) the camera stays on the S3b two-column pose until f924 so the Output bloom (S3b, f916-946) is seen, then pushes in (the first lines stream at 17 px for about 8 f). (2) The "assistantBadge then messageList" follow is one `answerStream` shot: the badge, the user bubble and the newest text all fit in it. (3) The stat chip is NOT at the top centre (default) or the bottom: at both places it covered the panel header / step cards. All three annotations live in the dimmed chat strip left of the panel (chip top, toast at the Save row, callout at the graph), so nothing covers the panel, the graph or the step cards. (4) The chip stays to f1090 (guide / `S3.stat.to` is f1079) so the finished numbers can be read for about 0.5 s; its exit wipe starts on the f1080 beat. (5) The callout window is 42 f (a 30 f window was mid-exit at the click).
+- The pull-back at f1064 hands the camera to S4: S4's first key (f1080, `composer`) takes over from a pose that is about 90% settled, so there is no jump.
+- Nothing here reads `useCurrentFrame()`; every component gets the global `frame` prop.
+
+### Verified
+- `npx tsc --noEmit` passes (strict).
+- Stills with a sandbox Chromium at f916, 930, 940, 960, 975, 990, 1000, 1010, 1020, 1030, 1036, 1042, 1048, 1050, 1058, 1064, 1070, 1085 (all looked at): legible stream with live colours, table filling, code typing, blockquote complete at f1030; pan to the panel with the callout dot on the graph edge; cursor tip on the Save row with the press ripple; toast beside the row; chip counting 0 -> 7 / 1 / 41.2 and wiping out; pull-back at f1085.
+- f1058 rendered twice is byte-identical (MD5). No Math.random, Date, timers, CSS transitions or network in `src/scenes/s3/S3c.tsx`.
+- Zoom numbers from `poseForKeyframe` (exp(logScale)): 1.80, 1.91, 1.84, 1.96, 1.46.
+
+### Known issues
+- Motion was not scrubbed in the Studio: stills and numbers only. Scrub f916-1090 once, especially the handoffs at f924, f1030 and f1064.
+- The table text is 21.6 px at f924 (zoom 1.80); the table is on screen from about f965, when the zoom is already 1.85 or more (22 px or better).
+- The chip's left edge is at x 100 (the 5% safe margin is 96) and the toast covers a few columns of the dimmed table in the chat strip. Both are transient and out of focus.
+- The toast width comes from `estimateTextWidth` (same as `fx/Toast.tsx`), so its gap to the panel is about 28 px give or take a few px.
+- In this authoring sandbox Remotion could not download its browser (no route to remotion.media); the stills used a local Chromium through `--browser-executable`.
+
+### Warnings for the next patch (13)
+- S3 ends settling on `teamTwoColumn` (padding 72, rotY 0.5). The chip is still wiping out and the toast is still on screen (to f1100) while S4 starts, so keep the top-left corner of the stage (x < 650, y < 150) and the area left of the panel at y 230-290 free of S4 overlays for the first 20 frames.
+- The cursor rests at about (1034, 205) UI px (over the Save row) from f1056. S4's first waypoint (the mode-picker click at f1104) travels from there.
+- The chat is scrolled to the bottom of the S3 answer at f1080 (`scrollAt` about 651); `layoutAt` / `anchorsAt` give the real row tops for S4.
