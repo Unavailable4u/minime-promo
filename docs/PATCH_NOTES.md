@@ -541,3 +541,66 @@ CHANGED  docs/PATCH_NOTES.md
 - The chat scrolls: row tops move (e.g. the hire card top is 231 at f1235 and 206 at f1244). Always ask `layoutAt` for the frame you need.
 - Graph node centers for callouts: `graphNodeUiPoint(id)` (patch 06) — `security_auditor` and `code_reviewer` are included.
 - Adding or changing script text means re-running `DevApp` with `{"measureRows":true}` to check the height estimates (`npx remotion still src/index.ts DevApp out/qa/x.png --frame=1100 --props='{"measureRows":true}'` and read the browser console).
+
+---
+
+## PATCH 08 — Master timeline, S0 Logo, S1 Reveal, scene stubs
+
+### Files created / changed
+```
+REPLACED src/MiniMePromo.tsx          (the real master timeline; the patch-00 placeholder is gone)
+CREATED  src/config/intro.ts          (S0 / S1 tunables: INTRO, LOCKUP, LOGO_BOUNDS, HEADLINE_LAYOUT, WINDOW_RISE)
+CREATED  src/scenes/sceneTypes.ts     src/scenes/index.ts (barrel)
+CREATED  src/scenes/S0Logo.tsx        src/scenes/S1Reveal.tsx            (real scenes)
+CREATED  src/scenes/S2Instant.tsx     src/scenes/S3Team.tsx              src/scenes/S4Control.tsx
+CREATED  src/scenes/S5Organized.tsx   src/scenes/S6Outro.tsx             (stubs, except S3Team: see below)
+CREATED  src/scenes/s3/S3a.tsx        src/scenes/s3/S3b.tsx              src/scenes/s3/S3c.tsx   (stubs)
+CHANGED  docs/PATCH_NOTES.md
+```
+`src/Root.tsx` is NOT changed: `MiniMePromo` and `MiniMePromo-Preview` already point at `./MiniMePromo`.
+
+### Public API
+
+**src/scenes/sceneTypes.ts**: `SceneOverlayProps {frame}` (GLOBAL frame), `GridOpacityFn (frame) => 0..1`, `WindowStyleFn (frame) => CSSProperties`.
+
+**src/scenes/index.ts** (the only thing `MiniMePromo.tsx` imports from scenes)
+- `ALL_CAMERA: CameraKeyframe[]`, `ALL_CURSOR: CursorWaypoint[]` (every `SN_CAMERA` / `SN_CURSOR` concatenated; S3 via `S3_CAMERA` / `S3_CURSOR`)
+- `SCENE_OVERLAYS: {id, from, to, Overlay}[]`: an overlay is mounted for global frames `from..to` and receives `frame`. S0 `0..INTRO.lockupExitEnd` (208), S1 `120..239`, S2-S5 scene range + 30 f tail, S6 `1500..TOTAL_FRAMES`. Overlays hide themselves outside their own timing, so wide ranges are harmless.
+- `gridOpacityAt(frame) = max(S0_GRID, S6_GRID)`, `windowStyleAt(frame)` = `S6_WINDOW(frame)` from f1500 when S6 provides one, otherwise `S1_WINDOW(frame)`.
+- Re-exports every scene export and `sceneTypes`.
+
+**Contract for every scene file** (names fixed): overlay component (`S2Instant`, `S3Team`, `S4Control`, `S5Organized`, `S6Outro`), `SN_CAMERA`, `SN_CURSOR`. S3 parts export `S3a/S3b/S3c` + `S3A_CAMERA/S3A_CURSOR` etc.; `S3Team.tsx` is final (patch 08) and concatenates them. S6 additionally exports `S6_GRID: GridOpacityFn` (stub returns 0) and `S6_WINDOW: WindowStyleFn | null` (stub null). Each stub carries a "STUB ... REPLACED in patch NN" comment.
+
+**src/config/intro.ts** (all frames through `f()`): `INTRO {blackHold, drawStart, impact 60, hitDecay, hitAmount .02, wordmarkStart 70, wordmarkEnd 100, lockupStart 100, lockupEnd 119, lockupExit 186, lockupExitEnd 208, gridInStart/End 100/119, gridOutStart/End 200/239, backdropFadeStart/End 96/140, stageGlowStart/End 110/170, headlineLine1 124, headlineLine2 150, headlineExit/End 200/232, windowRise 160, windowFadeFrames 14, windowSettleStart/End 196/236, windowDim .5, windowBrightenStart/End 196/236, cameraPush 212, dofOn 240}`; `LOCKUP {centerX, heroY 540, restY 112, restScale .55, markSizeAlone 560, markSizeLockup 250, wordmarkSize 120, gapEm .3, strokePx 4}`; `LOGO_BOUNDS {x0, x1, y0, y1, viewBoxWidth}`; `HEADLINE_LAYOUT {centerY, fontSize 116, scrimWidth, scrimHeight, scrimAlpha}`; `WINDOW_RISE {fromY 140, scaleFrom .86, scaleTo .94, rotateXFrom 18, rotateXTo 6}`.
+
+**src/scenes/S0Logo.tsx**: `S0Logo`, `S0_CAMERA = []`, `S0_CURSOR = []`, `S0_GRID`. **src/scenes/S1Reveal.tsx**: `S1Reveal`, `S1_CAMERA` (opening pose `fullWindow` padding 135 = zoom 1.0 with rotateY -4, push to padding 43 = zoom 1.227 at `INTRO.cameraPush`), `S1_CURSOR = []`, `S1_WINDOW`.
+
+### Decisions and conventions
+- The master timeline mounts the app from f120 (`SCENES.S1.start`) and drives it with the GLOBAL frame; `S1_WINDOW` keeps it at opacity 0 until f160 and returns the bare `{opacity: 1}` from f236, so every later scene works on a flat window with no transform or filter.
+- Overlays are NOT in `<Sequence>`s (a Sequence makes `useCurrentFrame()` local). They are filtered by `SCENE_OVERLAYS` ranges and get `frame` as a prop. This replaces the guide's "overlays in Sequences".
+- Overlays live in the Camera's SCREEN layer (never transformed, above the depth of field). The S0 lockup and the S1 headline are therefore not moved by the camera.
+- `LOGO_BOUNDS` is the painted bounding box of the exact Appendix A paths with the group transform applied (computed once with an SVG path bbox: x 157.105..840.75, y 141..651.414). `S0Logo` centers and spaces the lockup on that box, not on the empty viewBox margin.
+- Hero mark: `strokePx` 4 (the app's 2.5 px reads thin at 560 px). `markSizeAlone` 560 / `markSizeLockup` 250: the mark shrinks while the wordmark slides out (f70-100).
+- Camera push: the 'camera' spring is 99.5% settled 25 f after its keyframe, so the push starts at f212 (not f205): it is 90% done at f225, 97% at f230 and 99.8% at f240, i.e. it lands on the f240 beat. (Starting at f205 finished about 10 f early.) The comment in S1Reveal.tsx says f212.
+- Depth of field is off until f240 (`INTRO.dofOn`). With it on, the 1.2 px blur and 12% dim sit in the 43 px margin of the push-in frame, which is invisible at that point.
+- The `#050505` opener backdrop is a full-stage layer under the camera that dissolves f96-140 into the stage gradient. The crimson stage glow (alpha .10-.18, drifting) fades in f110-170.
+
+### Verified
+- `npx tsc --noEmit` passes (strict).
+- Stills rendered with a sandbox Chromium (headless shell 153) at f10, 30, 45, 60, 62, 80, 95, 119 (S0), f126, 140, 156, 168, 185, 200, 218, 239, 240 (S1/push), f330 and f1700 (later frames still render the persistent app through the stubs), and `MiniMePromo-Preview` f150 / f239 at 960x540.
+  - S0: pen-draw outline, fill takeover, impact bloom on f60, wordmark emerging from the mark's right edge, lockup resting at the top with the grid floor fading in.
+  - S1: headline words rising, `team.` crimson with underline, window rising dimmed with only Chat lit, lockup and headline blurring out, push-in lands flat at 92%.
+- Determinism: f200 rendered twice is byte-identical.
+- Camera numbers (`solveCameraAt`, no drift): zoom 1.0 until f212, 1.0480 at f215, 1.1527 at f220, 1.2029 at f225, 1.2266 at f240 (target 1.2271); rotateY -4 -> -0.008 at f240.
+
+### Known issues
+- Motion quality was not checked in the Studio (stills only): the window spring overshoot, the wordmark slide and the camera push should be scrubbed once.
+- The two tiny start dots visible at about f10 are the round pen caps at the first stroke; they are the pen touching down. If they read as noise, start the draw 1-2 f later or hide the stroke until progress > 0.02 in `MiniMeLogo`.
+- The first S1 camera keyframe is at f120, so the camera holds the opening pose (zoom 1, rotateY -4) through all of S0; nothing in S0 is in the world layer, so this is invisible.
+- Stubs: S2-S6 add no camera, cursor, captions or callouts yet. After f240 the camera stays on the push-in pose and the app plays its scripted states (f330 shows the Tier 0 flow, f1700 the S5 end state) until patches 09-15 land.
+
+### Warnings for the next patches (09+)
+- A scene's first camera keyframe must be later than `INTRO.cameraPush` (212); S2 starts its move to `composer` at f240.
+- `S6_WINDOW`, when it is non-null, takes over the window style from f1500. At f1499 the window is the bare identity style (`{opacity: 1}`), so start the S6 transform from the identity pose to avoid a jump.
+- `S6_GRID` is combined with `S0_GRID` by `max`. Patch 15 only needs to return its own 0..1 fade.
+- To add an overlay that must outlive its scene by more than 30 f, edit its `to` in `SCENE_OVERLAYS` (src/scenes/index.ts).
