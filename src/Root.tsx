@@ -1,5 +1,6 @@
 import React from 'react';
 import {Composition} from 'remotion';
+import {DEV_APP_FRAMES, DevApp, type DevAppProps} from './dev/DevApp';
 import {DevBrandSheet} from './dev/DevBrandSheet';
 import {DevFxSheet} from './dev/DevFxSheet';
 import {DEV_GRAPH_FRAMES, DevGraph} from './dev/DevGraph';
@@ -90,6 +91,15 @@ export const RemotionRoot: React.FC = () => {
         fps={FPS}
         width={STAGE.width}
         height={STAGE.height}
+      />
+      <Composition
+        id="DevApp"
+        component={DevApp}
+        durationInFrames={DEV_APP_FRAMES}
+        fps={FPS}
+        width={STAGE.width}
+        height={STAGE.height}
+        defaultProps={{showAnchors: false} satisfies DevAppProps}
       />
     </>
   );

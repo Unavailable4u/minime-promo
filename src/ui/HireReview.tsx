@@ -43,15 +43,20 @@ export type HireReviewProps = {
   miniStatus?: readonly ('pending' | 'running' | 'done')[];
   /** Frame local to the card (pulse of a running mini row). Default 0. */
   frame?: number;
+  /**
+   * Card width in px. Default 720 (the design width, panel closed). With the Working Panel open the message column
+   * is only 672 px wide, so <ChatApp/> passes the column width and the card shrinks with it (rows ellipsize).
+   */
+  width?: number;
 };
 
 /** Card-local rectangles of the buttons (add the card's absolute position yourself). */
-export const hireReviewLayout = (): {card: Rect; edit: Rect; approve: Rect; rows: Rect[]} => {
+export const hireReviewLayout = (width: number = HIRE.w): {card: Rect; edit: Rect; approve: Rect; rows: Rect[]} => {
   const buttonY = HIRE.h - HIRE.footerH + (HIRE.footerH - HIRE.buttonH) / 2;
-  const approve = {x: HIRE.w - HIRE.pad - HIRE.approveW, y: buttonY, w: HIRE.approveW, h: HIRE.buttonH};
+  const approve = {x: width - HIRE.pad - HIRE.approveW, y: buttonY, w: HIRE.approveW, h: HIRE.buttonH};
   const edit = {x: approve.x - HIRE.buttonGap - HIRE.editW, y: buttonY, w: HIRE.editW, h: HIRE.buttonH};
-  const rows = HIRE_ROLES.map((_, i) => ({x: HIRE.pad, y: HIRE.rowsTop + i * HIRE.rowH, w: HIRE.w - HIRE.pad * 2, h: HIRE.rowH}));
-  return {card: {x: 0, y: 0, w: HIRE.w, h: HIRE.h}, edit, approve, rows};
+  const rows = HIRE_ROLES.map((_, i) => ({x: HIRE.pad, y: HIRE.rowsTop + i * HIRE.rowH, w: width - HIRE.pad * 2, h: HIRE.rowH}));
+  return {card: {x: 0, y: 0, w: width, h: HIRE.h}, edit, approve, rows};
 };
 
 const appearOf = (reveal: number, index: number): {opacity: number; transform: string} => {
@@ -72,10 +77,11 @@ export const HireReview: React.FC<HireReviewProps> = ({
   approvePress = 0,
   miniStatus,
   frame = 0,
+  width = HIRE.w,
 }) => {
   const c = signatureEase(clamp01(collapse));
   const press = signatureEase(clamp01(approvePress));
-  const layout = hireReviewLayout();
+  const layout = hireReviewLayout(width);
   const height = Math.round(HIRE.h + (HIRE.miniH - HIRE.h) * c);
   const approveBg = lerpColor(hover?.approve || press > 0 ? ACCENT.hover : ACCENT.base, ACCENT.active, press);
 
@@ -84,7 +90,7 @@ export const HireReview: React.FC<HireReviewProps> = ({
       style={{
         position: 'relative',
         boxSizing: 'border-box',
-        width: HIRE.w,
+        width,
         height,
         background: NEUTRAL[900],
         border: `1px solid ${NEUTRAL[800]}`,

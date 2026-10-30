@@ -199,10 +199,49 @@ export const PROMPTS = {
 } as const;
 
 /**
- * Long streamed answers (patch 04 dev sheet; the script in patch 07 reuses them).
- * `team` is the Tier 3 answer to PROMPTS.team: heading, plan, pricing table, quote and a code block.
+ * Long streamed answers.
+ *  - `instant`: the Tier 0 answer of scene S2 (brief D2), two bullets.
+ *  - `teamFinal`: the Tier 3 answer of scene S3 (brief D3), streamed in the film by the script (patch 07).
+ *  - `team`: the patch 04 sample answer, kept only for the DevMarkdown sheet (heading, plan, table, quote, code).
  */
 export const ANSWERS = {
+  instant: [
+    '- **Debounce** waits until calls stop for a set delay, then fires once — ideal for search-as-you-type.',
+    "- **Throttle** fires at most once per interval, however often it's called — ideal for scroll and resize handlers.",
+  ].join('\n'),
+  teamFinal: [
+    '## Coffee Club — Launch Pack',
+    '',
+    'A lean plan to go from zero to your first 100 subscribers in four weeks.',
+    '',
+    '### 4-week plan',
+    '1. **Week 1 — Validate.** Landing page + waitlist, 10 customer interviews, lock the bean supplier.',
+    '2. **Week 2 — Build.** Signup and billing flow, subscriber dashboard, shipping rules.',
+    '3. **Week 3 — Soft launch.** 25 beta customers, fix onboarding drop-offs, collect testimonials.',
+    '4. **Week 4 — Public launch.** Press kit, referral codes, paid test on two channels.',
+    '',
+    '### Pricing',
+    '| Plan | Price | Includes |',
+    '|---|---|---|',
+    '| Starter | $14 / mo | 1 bag · 250 g · free shipping |',
+    '| Regular | $26 / mo | 2 bags · 500 g · pause anytime |',
+    "| Roaster's Pick | $42 / mo | 4 bags · 1 kg · priority roasts |",
+    '',
+    '### Signup endpoint',
+    '```js',
+    '// POST /api/subscribe',
+    'app.post("/api/subscribe", rateLimit, async (req, res) => {',
+    '  const { email, plan } = req.body;',
+    '  if (!/^\\S+@\\S+\\.\\S+$/.test(email)) {',
+    '    return res.status(400).json({ error: "Invalid email" });',
+    '  }',
+    '  const sub = await db.subscriptions.create({ email, plan, status: "trialing" });',
+    '  res.status(201).json({ id: sub.id, plan: sub.plan });',
+    '});',
+    '```',
+    '',
+    '> Verifier caught a missing rate limit — added `rateLimit` middleware and re-ran all 7 tests ✓',
+  ].join('\n'),
   team: [
     '## Coffee Club — Launch Pack',
     '',
@@ -239,16 +278,47 @@ export const ANSWERS = {
 } as const;
 
 /**
- * The five staffed roles of the "Review hires" card (patch 05, brief Appendix D4): the Audit task of scene S4.
+ * The five staffed roles of the "Review hires" card (brief Appendix D4): the Audit task of scene S4.
+ * Names and purposes are exactly D4 (patch 07 replaced the placeholder `responder` row of patch 05 with `test_writer`).
  * `tokens` sum to the 18k of UI_TEXT.hireReviewSubtitle.
  */
 export const HIRE_ROLES = [
-  {name: 'security_auditor', purpose: 'Scans the endpoint for injection, auth and rate-limit gaps', tokens: '4.2k'},
-  {name: 'code_reviewer', purpose: 'Reads the handler for bugs, unsafe patterns and style', tokens: '3.6k'},
-  {name: 'fixer', purpose: 'Patches every issue the audit and the review find', tokens: '4.4k'},
-  {name: 'report_writer', purpose: 'Turns findings and fixes into a clear report', tokens: '3.4k'},
-  {name: 'responder', purpose: 'Writes the final answer back into the chat', tokens: '2.4k'},
+  {name: 'security_auditor', purpose: 'Hunts for injection, auth and rate-limit gaps', tokens: '4.2k'},
+  {name: 'code_reviewer', purpose: 'Line-by-line review of the endpoint', tokens: '3.6k'},
+  {name: 'test_writer', purpose: 'Writes abuse-case tests', tokens: '3.2k'},
+  {name: 'fixer', purpose: 'Patches what the audit finds', tokens: '4.0k'},
+  {name: 'report_writer', purpose: 'Summarizes findings and fixes', tokens: '3.0k'},
 ] as const;
+
+/**
+ * Elapsed times shown in the assistant meta row (patch 07). The Tier 0 answer is "1.2s"; the Tier 3 run counts up
+ * (about 2.8x video speed) and lands on `teamSeconds` (41.2 -> "41s").
+ */
+export const META_TEXT = {
+  instantElapsed: '1.2s',
+  teamSeconds: 41.2,
+} as const;
+
+/**
+ * Expanded summaries of the seven step cards of the Tier 3 run (brief Appendix D3). Step cards are plain text,
+ * so the bold marks of D3 are dropped. `verifier.flag` is the first (failing) run, `verifier.pass` the second.
+ */
+export const STEP_TEXT = {
+  inspector: 'Multi-part build request → Tier 3 · adaptive. Staffing 6 specialists.',
+  strategist: 'Sequenced the launch: validate → build → soft launch → public launch.',
+  market_researcher: 'Benchmarked 6 subscription roasters; recommended three price points.',
+  code_writer: {
+    first: 'Express endpoint with validation.',
+    rerun: 'Added rate limiting.',
+  },
+  test_writer: '7 tests: happy path, bad email, duplicate, abuse burst.',
+  verifier: {
+    flag: 'Public endpoint has no rate limit.',
+    pass: 'All checks pass.',
+    note: '→ sent back to recheck code_writer',
+  },
+  documentation_writer: 'Launch plan, pricing table and endpoint notes assembled.',
+} as const;
 
 /**
  * Text of the routing graph (patch 06, brief §6.4 item 6 and Appendix D3).

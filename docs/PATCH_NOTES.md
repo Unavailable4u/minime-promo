@@ -467,3 +467,77 @@ CHANGED  docs/PATCH_NOTES.md
 - Build `nodes` / `edges` with `graphStateAt(frame, NODE_SCHEDULES, EDGE_SCHEDULES)` from the script's step timings. Pass `frame` (global) so the particles stay continuous across scenes.
 - Use `graphNodeUiPoint(id)` for the callout "Every step traced" and the Tier / Inspector callouts.
 - `HIRE_ROLES` in copy.ts (patch 05) uses `responder` where Appendix D4 lists `test_writer`; if D4 is the source of truth, fix it in patch 07.
+
+---
+
+## PATCH 07 — The whole choreography as data, and the persistent ChatApp
+
+### Files created / changed
+```
+CREATED  src/config/script.ts        (all frame numbers of S2..S5 as data)
+CREATED  src/config/appState.ts      (appStateAt / useAppState, layoutAt, scrollAt, panelWidthAt)
+CREATED  src/config/anchors.ts       (anchorsAt(frame): cursor / callout targets in logical UI px)
+CREATED  src/config/anchorsMath.ts   (lerpFraction)
+CREATED  src/ui/ChatApp.tsx          (<ChatApp/>, <ChatAppView/>)
+CREATED  src/dev/DevApp.tsx          (dev-only composition, 1501 f, frame = global film frame)
+CHANGED  src/Root.tsx                (registers DevApp under the DEV-ONLY comment)
+CHANGED  src/config/copy.ts          (+ ANSWERS.instant / teamFinal, META_TEXT, STEP_TEXT; HIRE_ROLES = D4)
+CHANGED  src/config/graphLayout.ts   (+ nodes security_auditor, code_reviewer and their two edges)
+CHANGED  src/ui/RoutingCard.tsx      (fromTier may be 'routing': the "routing…" -> tier text morph)
+CHANGED  src/ui/HireReview.tsx       (+ `width` prop, hireReviewLayout(width))
+CHANGED  src/ui/ChatBox.tsx          (+ data-chat-column attribute on the message column, for DevApp measureRows)
+CHANGED  src/ui/Markdown.tsx         (CHAR_W 7.3 -> 7.0, see Decisions)
+CHANGED  docs/PATCH_NOTES.md
+```
+
+### Public API
+
+**src/config/script.ts** — the choreography as data (every number authored with `f()` / `sec()` / `beat()`).
+- Objects: `S2` (prompt typing, Enter, user bubble, working, answer stream, sidebar auto-title), `S3` (+ `S3.steps`, `S3.graph`, `S3.routing`, `S3.reveal`, `S3.panel`, `S3.answer`, `S3.save`, `S3.stepsScroll`), `S4` (mode menu, review hires, prompt, hire card, approve, pause / resume, `S4.steps`, `S4.graph`, `S4.panel`), `S5` (search, clear, new chat, panel close, attach, chip).
+- Lists: `HOVER_WINDOWS`, `PRESS_EVENTS` (+ `PRESS_FRAMES`), `FOCUS_EVENTS` (+ `FOCUS_RAMP_FRAMES`: which control the camera / cursor focuses), `SCROLL {keepAbove 120, omega 0.28, topPadding 24}`, `CHAT_RANGE {from 240, to 1500}`, `ELAPSED_RATE` 2.8 (the "Working… 3s" counter runs 2.8x film time).
+- Types: `TypingScript`, `StepRun`, `ExpandWindow`, `StepScript`, `HoverTarget`, `HoverWindow`, `PressTarget`.
+- Key frames (global): S2 prompt typed 262-318, Enter 324, user bubble 326, working 334-352, answer 356-410, sidebar title typed 380-420. S3 prompt 496-586, Enter 590, panel opens 604, routing reveal morph 660-676, final answer 916-1030, save-template click 1056, toast 1060. S4 mode menu opens 1104, Expert 1140, Review hires click 1166, prompt 1183-1213, Enter 1217, hire card 1220, Approve click 1244, Pause 1262, Resume 1290. S5 search click 1334, typing 1340-1356, clear 1384, New chat 1398/1400, panel closes 1402, attach click 1434, chip 1436.
+
+**src/config/appState.ts**
+- `appStateAt(frame): AppState` (pure; `useAppState(frame)` is the same function under the guide's name, NOT a hook). `AppState {frame, sidebar, panelWidth, panel: PanelState | null, chat {rows, scrollY, reviewHires, reviewHover, reviewPressed, emptyState}, composer}`.
+- Rows: `RowState = User | Working | Assistant | Hire` (`kind` discriminates). `StepViewState`, `PanelState`.
+- `layoutAt(frame): ChatLayout {rows: {row, top, height}[], scrollY, panelWidth, chatW, colW, columnX}` — absolute row tops in logical UI px with the scroll applied (this is what anchors use).
+- `scrollAt(frame)`, `panelWidthAt(frame)`, `HIRE_CARD_W` (672: the Hire Review card takes the message column width while the panel is open).
+- Auto-scroll: critically damped follower (omega 0.28) towards "bottom of the content, keeping the newest row's top at least 120 px below the header". It is precomputed ONCE as a Float64Array over all frames, so any frame renders identically on any worker.
+- Row heights are ESTIMATED (no DOM): user rows from char count, assistant rows from `estimateMarkdownHeight`, hire row from `HIRE`. The estimates were checked against the real DOM (see Verified).
+
+**src/config/anchors.ts**
+- `anchorsAt(frame): Anchors` (logical UI px; add `UI_OFFSET` for stage px): `textarea, sendButton, pauseButton, resumeButton, modeButton, modeMenu, modeMenuRow(i), reviewHires, hireCard, approveButton, editButton, saveTemplate, searchField, searchClear, newChatButton, attachButton, attachmentChip, instantBadge, tierBadge, pausedBadge, panelGraph, panelSteps`. `null` = the control does not exist at this frame. `anchorPoint(rect, fx?, fy?)`.
+
+**src/ui/ChatApp.tsx** `<ChatApp frame? rimAngle? rimIntensity? style? />` — ONE persistent component, 1440 x 810 logical. Pass `frame` (global) explicitly when it sits inside a `<Sequence>`. `<ChatAppView state />` draws an already computed `AppState`. Scenes (patches 08+) only add camera, cursor and overlays; they never rebuild UI.
+
+**src/dev/DevApp.tsx** `DevApp`, `DEV_APP_FRAMES` (1501), props `{showAnchors?: boolean, measureRows?: boolean}`. Local frame = global film frame, so the guide's `--frame=330 ... 1400` work as written. `showAnchors` draws every `anchorsAt` rectangle over the DOM; `measureRows` logs estimated vs real row heights to the console.
+
+**src/ui/HireReview.tsx** + `width?: number` (default 720); `hireReviewLayout(width = 720)`.
+
+### Decisions and conventions
+- The persistent app is driven by ONE function of the global frame. No Sequence-local state, no CSS transitions, no timers, no Math.random / Date.
+- D3 / D4 data: `HIRE_ROLES` now follows Appendix D4 (security_auditor, code_reviewer, test_writer, fixer, report_writer; the patch 06 note about `responder` is resolved). The S4 graph uses nodes `security_auditor` and `code_reviewer` (added to `GraphNodeId` / `GRAPH_NODE_ORDER`, both children of the inspector).
+- Sidebar auto-title (S2) types with real keystroke frames (`TITLE_TYPING`), so its caret follows the keystrokes.
+- Routing card: while the router "thinks" it shows "routing…" (`fromTier: 'routing'`), then morphs into the tier text; the Tier 0 answer shows the instant summary.
+- Hire Review card: designed 720 px wide for the panel-closed layout, but it only exists while the panel is open (message column = 672 px), where it was clipped on the right. It now takes `HIRE_CARD_W` = 672. `FOCUS_RECTS.hiresCard` (w 720) is therefore the panel-closed design size only.
+- `Markdown` `CHAR_W` 7.3 -> 7.0 (average real Inter 14 px advance in this text). With 7.3 a 72-char paragraph that really fits on one line was estimated as two lines. Assistant bubble inner width = `0.8 * colW - 26`. User rows still use 7.3 (they matched).
+
+### Verified
+- `npx tsc --noEmit` passes (strict).
+- DevApp stills at 330, 420, 700, 860, 990, 1140, 1262, 1400 (+ 352, 640, 1060, 1235, 1290, 1430 with the anchors overlay) with the sandbox Chromium: Tier 0 answer + sidebar auto-title, panel opening with the graph growing, step cards (done / running / flip), final answer with table, code block and the ✓ recheck note, mode menu with Expert checked, Hire Review (fits the column) and its mini-trace statuses, Paused / Resume, S5 empty chat with the panel closing.
+- Row heights, estimate vs real DOM (`measureRows`): every row within 0.5 px, including the streaming heights of the long answer at frames 930, 960, 980, 1000, 1020, 1040 (e.g. 850 vs 850.5 final).
+- Anchors line up with the DOM (hire card, save template, graph, steps, composer controls).
+
+### Known issues
+- The static `FOCUS_RECTS` (`assistantBadge`, `hiresCard`, `messageList`) do NOT follow the scrolled chat in S3 / S4. For a camera focus on a chat row use `layoutAt(frame)` / `anchorsAt(frame)` (they include the scroll), not `focusRect(...)`.
+- `→` and `✓` are outside the Latin font subset; they render through the fallback font (looks right in stills, but check the final render if the glyph weight matters).
+- The mode menu's "Expert" description (`Allow the full staffed ceiling`) wraps to a third line that is clipped by the row (ChatBox menu from patch 03; shorten the copy or raise the row height there).
+- Not checked: motion in the Studio (stills only).
+
+### Warnings for the next patches (08+)
+- Never rebuild UI in a scene: mount `<ChatApp frame={globalFrame} />` once and put camera / cursor / callouts around it. Inside a `<Sequence>` ALWAYS pass `frame`.
+- Cursor / callout targets: `anchorsAt(frame)` (logical UI px, + `UI_OFFSET` on the stage). Panel anchors (`saveTemplate`, `panelGraph`, `panelSteps`) are only valid while the panel is open (about 610-1400). Reference positions: sendButton {1340,753,84,41}; saveTemplate at 1056 {972,184,132,24}; Approve at 1244 {804,538,124,32}; Resume at 1262 {860,753,84,41}; searchField {12,96,232,26}; searchClear {219,101,16,16}; newChatButton {174,57,22,22}; attachButton {272,753,34,41}.
+- The chat scrolls: row tops move (e.g. the hire card top is 231 at f1235 and 206 at f1244). Always ask `layoutAt` for the frame you need.
+- Graph node centers for callouts: `graphNodeUiPoint(id)` (patch 06) — `security_auditor` and `code_reviewer` are included.
+- Adding or changing script text means re-running `DevApp` with `{"measureRows":true}` to check the height estimates (`npx remotion still src/index.ts DevApp out/qa/x.png --frame=1100 --props='{"measureRows":true}'` and read the browser console).

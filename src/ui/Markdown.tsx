@@ -517,7 +517,7 @@ export const Markdown: React.FC<MarkdownProps> = ({text, caret = false, frame = 
 
 // ------------------------------------------------------------------ height estimate
 /** Average advance of one character, in px (Inter at 14 px). */
-const CHAR_W = 7.3;
+const CHAR_W = 7.0;
 
 const wrappedLines = (chars: number, widthPx: number, charW: number): number =>
   Math.max(1, Math.ceil((chars * charW) / Math.max(40, widthPx)));

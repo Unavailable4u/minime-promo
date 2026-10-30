@@ -59,7 +59,10 @@ export type GraphNodeId =
   | 'test_writer'
   | 'verifier'
   | 'output'
-  | 'pool';
+  | 'pool'
+  // the S4 audit run (patch 07): the Inspector staffs two roles in parallel
+  | 'security_auditor'
+  | 'code_reviewer';
 
 export type GraphNodeKind = 'endpoint' | 'role' | 'decision';
 export type LabelSide = 'below' | 'above' | 'right';
@@ -129,6 +132,9 @@ export const GRAPH_NODES: Readonly<Record<GraphNodeId, GraphNodeDef>> = {
     color: EDGE_COLORS.decision,
     labelSide: 'right',
   },
+  // S4 audit run: two roles fan out of the Inspector (positions are authored here, the brief has none for them)
+  security_auditor: role('security_auditor', 205, 96, 'above'),
+  code_reviewer: role('code_reviewer', 205, 204, 'below'),
 };
 
 /** Draw / stack order of the nodes (also the order of the dev checks). */
@@ -143,6 +149,8 @@ export const GRAPH_NODE_ORDER: readonly GraphNodeId[] = [
   'verifier',
   'output',
   'pool',
+  'security_auditor',
+  'code_reviewer',
 ];
 
 // ------------------------------------------------------------------------ edges
@@ -176,6 +184,9 @@ export const GRAPH_EDGES: readonly GraphEdgeDef[] = [
   edge('verifier', 'output', 'plan'),
   edge('documentation_writer', 'output', 'plan'),
   edge('pool', 'code_writer', 'decision'),
+  // S4 audit run
+  edge('inspector', 'security_auditor', 'plan'),
+  edge('inspector', 'code_reviewer', 'plan'),
 ];
 
 export const edgeColor = (reason: EdgeReason): string => EDGE_COLORS[reason];

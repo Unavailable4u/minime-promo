@@ -10,8 +10,11 @@ import {PANEL} from './panelLayout';
 export type RoutingCardProps = {
   /** Which tier the card describes. "instant" reads "Instant response — no pipeline". Default "adaptive". */
   tier?: TierKey;
-  /** The tier the text is morphing AWAY from (the moment the Inspector decides). Used with `morph`. */
-  fromTier?: TierKey;
+  /**
+   * What the text is morphing AWAY from (the moment the Inspector decides). Used with `morph`.
+   * A tier, or 'routing' for the neutral "routing…" text that shows while the Inspector is still classifying.
+   */
+  fromTier?: TierKey | 'routing';
   /** 0..1 progress of the text morph from `fromTier` to `tier`. Default 1. */
   morph?: number;
   /** Details open 0..1 (chevron turns, trace lines unfold). Default 0. */
@@ -30,7 +33,8 @@ const DETAIL_LINE = 15;
 export const routingCardHeight = (details: readonly string[] | undefined, open: number): number =>
   PANEL.routingH + (details && details.length > 0 ? Math.round((details.length * DETAIL_LINE + 12) * signatureEase(clamp01(open))) : 0);
 
-const summaryText = (tier: TierKey): string => (tier === 'instant' ? UI_TEXT.routingInstant : tierText(tier));
+const summaryText = (tier: TierKey | 'routing'): string =>
+  tier === 'routing' ? UI_TEXT.routing : tier === 'instant' ? UI_TEXT.routingInstant : tierText(tier);
 
 /**
  * Routing card ("details" style): rounded 8, 1 px #262626, bg rgba(10,10,10,.5), 12 px. Summary px8 py6:
@@ -75,7 +79,7 @@ export const RoutingCard: React.FC<RoutingCardProps> = ({
             <span
               style={{gridArea: '1 / 1', color: NEUTRAL[300], opacity: 1 - m, transform: `translateY(${-LINE * m}px)`, whiteSpace: 'pre'}}
             >
-              {summaryText(fromTier as TierKey)}
+              {summaryText(fromTier ?? tier)}
             </span>
             <span
               style={{gridArea: '1 / 1', color: NEUTRAL[300], opacity: m, transform: `translateY(${LINE * (1 - m)}px)`, whiteSpace: 'pre'}}

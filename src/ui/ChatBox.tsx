@@ -106,7 +106,9 @@ export const ChatBox: React.FC<ChatBoxProps> = ({
             <MiniMeLogo progress={1} fill={1} size={120} />
           </div>
         ) : null}
-        <div style={{padding: '24px 16px', transform: `translateY(${-scrollY}px)`}}>{children}</div>
+        <div data-chat-column style={{padding: '24px 16px', transform: `translateY(${-scrollY}px)`}}>
+          {children}
+        </div>
       </div>
 
       <Composer {...composer} />
