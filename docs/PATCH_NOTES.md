@@ -410,3 +410,60 @@ CHANGED  docs/PATCH_NOTES.md
 ### Warnings for the next patches
 - Patch 06: render the graph into the 456 x 288 slot (`graph` prop); its card chrome (rounded 8, #262626, bg #0a0a0a) is the graph's own business.
 - Patch 07: build `StepCard` props from the script (status, ms, expand, flash, flip) and `routing` from the tier reveal; use `PANEL_CASCADE_FRAMES` and `HIRE_REVEAL_FRAMES` for scene timing, `panelLayout()` / `stepCardRect()` / `hireReviewLayout()` for cursor and callout anchors.
+
+---
+
+## PATCH 06 — Routing graph (SVG)
+
+### Files created / changed
+```
+CREATED  src/config/graphLayout.ts   src/ui/RoutingGraph.tsx   src/ui/graphState.ts
+CREATED  src/dev/DevGraph.tsx        (dev-only composition, 240 f)
+CHANGED  src/config/copy.ts          (+ GRAPH_TEXT: decision label and legend labels)
+CHANGED  src/Root.tsx                (registers DevGraph under the DEV-ONLY comment; final compositions untouched)
+CHANGED  docs/PATCH_NOTES.md
+```
+
+### Public API
+
+**src/config/graphLayout.ts**
+- `GRAPH` (tunables): `box {440, 300}`, `viewBox {0, 50, 440, 236}` (the drawn crop), `legendH` 34, `nodeRadius` 11, `endpointRadius` 13, `decisionRadius` 7, `emojiScale` 1.65, `ringWidth` 2, `labelSize` 11, `wobbleAmplitude` 2.4, `particleSpeed` 1.9 (units/frame), `particlesPerEdge` 2, `arrowLength`, `arrowHalfWidth`, `fillAlpha {default .92, pending .22, running .60}`.
+- `GraphNodeId` = `input | inspector | strategist | market_researcher | documentation_writer | code_writer | test_writer | verifier | output | pool`; `GRAPH_NODES: Record<GraphNodeId, GraphNodeDef {id, label, kind: endpoint|role|decision, x, y, radius, emoji?, color, labelSide: below|above|right}>`; `GRAPH_NODE_ORDER`.
+- `GRAPH_EDGES: GraphEdgeDef[] {id: 'from>to', from, to, reason: EdgeReason, bend}`; edge ids: `input>inspector`, `inspector>strategist`, `strategist>market_researcher`, `strategist>code_writer`, `market_researcher>documentation_writer`, `code_writer>test_writer`, `test_writer>verifier`, `verifier>code_writer` (recheck, bend -34), `verifier>output`, `documentation_writer>output`, `pool>code_writer` (decision, dashed).
+- `edgeColor(reason)`, `edgeIsDashed(reason)`, `edgeWidth(reason)`, `nodeParent(id)`.
+- Curve math: `Pt`, `QuadCurve`, `edgeCurve(a, b, startInset, endInset, bend)`, `quadPoint`, `quadTangent`, `quadLength`, `quadPath`.
+
+**src/ui/RoutingGraph.tsx** `<RoutingGraph frame? nodes edges legend? wobble? style? />` fills its parent (pass it as `graph` of `<WorkingPanel/>`, 456 x 288 slot).
+- `nodes: Partial<Record<GraphNodeId, GraphNodeState>>`, `GraphNodeState {appear, status, ring?, fromStatus?, pulse?}`; `status` = `done | running | error | paused | pending | awaiting`. A node with no entry (or `appear` <= 0) is not drawn.
+- `edges: Partial<Record<string, GraphEdgeState>>` keyed by edge id, `GraphEdgeState {appear, flow?, speed?, phase?}` (`flow` 0..1 particle visibility, `speed` constant multiplier, `phase` extra cycles).
+- `frame` only drives decoration (running pulse, wobble, particle travel). Default: the current frame.
+- Exports `graphFit(width, height)` and `graphNodeUiPoint(id)` (node center in the UI's logical 1440x810 space with the panel open, wobble ignored; use it for callout anchors and cursor targets).
+
+**src/ui/graphState.ts** (schedule -> props, for the script in patch 07)
+- `nodeStateAt(frame, {appear, phases: [{frame, status}...]})`, `edgeStateAt(frame, {start, drawFrames?, flowFrom?, flowTo?})`, `graphStateAt(frame, nodeSchedules, edgeSchedules)` returns `{nodes, edges}` for `<RoutingGraph/>`.
+- Constants `GRAPH_RING_DRAW_FRAMES` (12), `GRAPH_RING_START_FRAMES` (8), `GRAPH_EDGE_DRAW_FRAMES` (14), `GRAPH_FLOW_FADE_FRAMES` (8). A status change draws the new ring over the old one (`fromStatus`), so a finishing node shows amber, then green drawing on. A status may repeat (code_writer re-run).
+
+**src/config/copy.ts** + `GRAPH_TEXT {decisionLabel, legend {done, running, error, awaiting, pending, requested, decision}}`.
+
+### Decisions and conventions
+- SVG, not canvas. Layers: edges (+ particles), node glyphs, labels on top. Labels have a #0a0a0a halo (`paint-order: stroke`) so edges can run behind text.
+- Emoji go through `<Emoji/>` inside a `foreignObject` (so Remotion waits for the image to load). Decision node has no emoji: a small fork glyph in SVG.
+- Layout changes versus Appendix D3: `market_researcher`'s label is above its node (labels were 105 and 122 px wide on nodes 73 px apart); the decision label is to the right of its node (about 215 px wide). Node coordinates are exactly the brief's. The drawn crop is y 50..286 of the 440x300 box; scale in the slot is 1.036.
+- Ring: 2 px at radius r + 1. done / error / running draw on with `pathLength` (butt caps, no start dot); pending is dashed `2 2`; paused and awaiting are dashed `3 2.2`, slowly rotating, pulsing. Fill alpha cross-fades with the ring progress.
+- Node entry: position lerps from the parent node's position (`nodeParent`) with the raw spring value (overshoot visible), scale .5 -> 1. Wobble: two seeded sines per axis, amplitude 2.4 units (2.5 px in the slot, under the 3 px limit), half for the endpoints.
+- Dashed edges (decision) draw on through an SVG mask; solid edges through `pathLength`. Arrowhead fades in over the last 20 % of the draw. Particles only run once the line has fully arrived. The recheck edge also gets a faint wide halo while its particles flow.
+- Legend: two fixed rows (status rings, then pending / requested / decision), drawn with inline SVG swatches, 11 px Inter neutral-400.
+
+### Verified
+- `npx tsc --noEmit` passes (strict).
+- DevGraph stills at frames 12, 60, 100, 150, 190, 205, 239 with the sandbox Chromium: growth from Input, parallel researcher / code_writer with glow and the dashed decision node, the red verifier ring, the amber recheck edge drawing back to code_writer with particles, code_writer re-run, final graph with Output. The same frame rendered twice is byte-identical.
+
+### Known issues
+- DevPanel (patch 05) still shows its graph placeholder; the real graph is wired in by the ChatApp in patch 07.
+- Edge particles use the constant speed `GRAPH.particleSpeed` per frame, so a short edge cycles faster than a long one in time but not in pixels per frame. Pass `phase` for a different feel.
+- Not checked: motion in the Studio (stills only), and the legend at other panel widths (the panel is always 480 px).
+
+### Warnings for the next patch (07)
+- Build `nodes` / `edges` with `graphStateAt(frame, NODE_SCHEDULES, EDGE_SCHEDULES)` from the script's step timings. Pass `frame` (global) so the particles stay continuous across scenes.
+- Use `graphNodeUiPoint(id)` for the callout "Every step traced" and the Tier / Inspector callouts.
+- `HIRE_ROLES` in copy.ts (patch 05) uses `responder` where Appendix D4 lists `test_writer`; if D4 is the source of truth, fix it in patch 07.

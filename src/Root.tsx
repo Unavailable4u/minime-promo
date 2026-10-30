@@ -2,6 +2,7 @@ import React from 'react';
 import {Composition} from 'remotion';
 import {DevBrandSheet} from './dev/DevBrandSheet';
 import {DevFxSheet} from './dev/DevFxSheet';
+import {DEV_GRAPH_FRAMES, DevGraph} from './dev/DevGraph';
 import {DEV_MARKDOWN_FRAMES, DevMarkdown} from './dev/DevMarkdown';
 import {DEV_PANEL_FRAMES, DevPanel} from './dev/DevPanel';
 import {DEV_SHELL_FRAMES, DevShell} from './dev/DevShell';
@@ -78,6 +79,14 @@ export const RemotionRoot: React.FC = () => {
         id="DevMarkdown"
         component={DevMarkdown}
         durationInFrames={DEV_MARKDOWN_FRAMES}
+        fps={FPS}
+        width={STAGE.width}
+        height={STAGE.height}
+      />
+      <Composition
+        id="DevGraph"
+        component={DevGraph}
+        durationInFrames={DEV_GRAPH_FRAMES}
         fps={FPS}
         width={STAGE.width}
         height={STAGE.height}

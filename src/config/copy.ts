@@ -249,3 +249,20 @@ export const HIRE_ROLES = [
   {name: 'report_writer', purpose: 'Turns findings and fixes into a clear report', tokens: '3.4k'},
   {name: 'responder', purpose: 'Writes the final answer back into the chat', tokens: '2.4k'},
 ] as const;
+
+/**
+ * Text of the routing graph (patch 06, brief §6.4 item 6 and Appendix D3).
+ * `decisionLabel` is the label of the dashed worker-pool decision node; `legend` is the strip under the graph.
+ */
+export const GRAPH_TEXT = {
+  decisionLabel: 'Worker pool: code_writer (3/5 picked)',
+  legend: {
+    done: 'done',
+    running: 'running',
+    error: 'error',
+    awaiting: 'awaiting approval',
+    pending: 'pending',
+    requested: 'requested',
+    decision: 'decision',
+  },
+} as const;
