@@ -893,3 +893,67 @@ Overlay (SCREEN layer, global `frame`):
 - S4 ends settled on `controlWide`; S5's first camera key (sidebar search at f1328) starts from it.
 - The cursor rests on the Pause button at about (902, 774) UI px from f1290.
 - The Working Panel is still open at f1320; S5 closes it at f1402.
+
+---
+
+## PATCH 14 — S5 Organized (f1320-1499)
+
+### Files created / changed
+```
+REPLACED src/scenes/S5Organized.tsx   (the patch-08 stub is gone: real camera, cursor and overlay)
+CHANGED  src/config/focus.ts          (+ FOCUS_RECTS organizeSidebar, organizeComposer)
+CHANGED  docs/PATCH_NOTES.md
+```
+`src/scenes/index.ts`, `src/MiniMePromo.tsx`, `src/config/script.ts`, `src/config/appState.ts` and every ui / fx file are NOT changed. The script already drives the sidebar filter, the new-chat row, the panel close and the attachment chip, so nothing needed tuning. S5Organized keeps its three patch-08 export names (`S5Organized`, `S5_CAMERA`, `S5_CURSOR`).
+
+### Public API
+**src/scenes/S5Organized.tsx**: `S5Organized` (overlay, `SceneOverlayProps`), `S5_CAMERA: CameraKeyframe[]`, `S5_CURSOR: CursorWaypoint[]`.
+
+Camera (frame = the frame the move STARTS):
+
+| start | target | padding | scaleBias | rotX / rotY | ease | zoom on the 1080p frame |
+|---|---|---|---|---|---|---|
+| f1320 | `organizeSidebar` | 72 | 1 | 0.8 / -2 | camera spring | 1.60 (whip-pan left from `controlWide`; search hover f1328, click f1334, filter f1340-1356, clear f1384, "+" click f1398) |
+| f1408 | `organizeComposer` | 72 | 1 | 0.4 / 1.5 | `signatureEase` (25 f) | 2.34 (down to the composer; attach hover f1428, click f1434, chip f1436-1446, check f1456-1464) |
+| f1466 | `organizeComposer` | 72 | 1.07 | 0.7 / -1.2 | camera spring | 2.50 -> clamped to `CAMERA_LIMITS.maxScale` 2.4 (slow push-in so the last 34 f never freeze) |
+
+There is deliberately no key at f1500: S6 takes over from the f1466 pose.
+
+Cursor (UI logical px, every point derived from `anchorsAt()`): search field hover f1328 / click f1334 (right part of the field, clear of the typed text); (x) hover f1380 / click f1384; "+" hover f1392 / click f1398; Paperclip hover f1428 / click f1434; then it glides off to about (622, 603) by f1470 so the spinner and the check can be read. Hover ids are `search`, `clear`, `new-chat`, `attach` (they match `HOVER_WINDOWS`) plus free-form `idle`.
+
+Overlay (SCREEN layer, global `frame`):
+- `Caption` `CAPTIONS.organized` f1320-f1392, `bottom={80}` (24 px lower than the default 104, so it clears the dim "Working..." line of the S4 chat at zoom 1.60).
+- `Callout` `CALLOUTS.searchEverything` f1336-f1380 on the right end of the search field (side `right`, distance 96).
+- `Callout` `CALLOUTS.newChat` f1390-f1422 on the right edge of the first sidebar row, where the new "New Chat" row slides in (side `right`, distance 96).
+- `Callout` `CALLOUTS.dropFiles` f1438-f1486 on the right end of the competitors.pdf chip (side `right`, distance 96).
+
+**src/config/focus.ts** (logical UI px): `organizeSidebar {0, 48, 900, 585}`, `organizeComposer {256, 600, 760, 210}`.
+
+### Decisions and conventions
+- `organizeSidebar` is wide (900) on purpose: the camera centres on the rect, so the sidebar sits on the left of the stage and the callout chips fall over the chat box. Its height (585) fixes the zoom at 1.60 and keeps the nav row whole.
+- `organizeComposer` frames the composer with the Working Panel CLOSED (it closes at f1402). The empty chat's faint logo watermark (UI y about 380..435) is out of frame.
+- Nothing here reads `useCurrentFrame()`; every component gets the global `frame` prop.
+
+### Deviations from the guide's prompt
+- Whip-pan lands at zoom 1.6, not about 1.7: at 1.7 the top nav row was cut in half at the top edge.
+- No motion / directional blur: `Camera.tsx` has no blur option (the guide allows skipping it).
+- The move to the composer starts at f1408 with `signatureEase`, not at about f1400 with the spring. A slow start keeps the "New chat, one click" callout attached to the sidebar for a few more frames; the move is settled by about f1433, before the attach hover (f1428-1440) has finished.
+- The guide asks to return to the composer "by f1425": this scene is settled at about f1433, 8 f later, because the "+" click is f1398 and the panel only closes at f1402 (script-fixed).
+- Added a push-in at f1466 (not in the guide) so the last 34 frames are not a static hold.
+- The caption leaves at f1392 (before the new-chat click) so it never sits over the empty chat.
+
+### Verified
+- `npx tsc --noEmit` passes (strict).
+- Stills (Chromium from `@sparticuz/chromium` through `--browser-executable`, `--gl=swangle`) at f1320, 1325, 1334, 1345, 1356, 1380, 1384, 1398, 1408, 1412, 1430, 1436, 1446, 1462, 1490, all looked at: nav row whole at f1345; "coffee" typed with the live filter and the match highlighted; cursor on the (x) at f1380 and the query cleared with rows sliding back at f1384; "New Chat" row in, empty chat with the watermark and the panel closed at f1412; Paperclip hover and click ripple (f1430, f1436); chip with spinner (f1446) and the green check (f1462, f1490); all three callouts fully revealed (f1356, f1412, f1462); clean final hold at f1490.
+- f1462 rendered twice is byte-identical (MD5 f96070be032724afca2cce6d16a7167e). No Math.random, Date, timers, CSS transitions or network in `src/scenes/S5Organized.tsx`.
+
+### Known issues
+- Motion was not scrubbed in the Studio: stills only. Scrub f1320-1500, especially the hand-offs at f1320, f1408 and f1466.
+- During the f1408 move the top nav is cut by the top edge of the frame for a few frames (the camera is travelling down, f1412 shows it); the "New chat, one click" callout is still visible and legible at that moment.
+- The callout chips are masked line-rises: stills taken 8-9 f after a callout starts (f1345, f1398, f1446) show a clipped chip. That is the reveal, not a bug.
+- The `organizeComposer` shot is mostly empty dark chat above the composer: it is the empty-chat state the scene is about.
+
+### Warnings for the next patch (15)
+- S5 ends settled on `organizeComposer` (scaleBias 1.07, zoom clamped to 2.4, rotY -1.2). S6's first camera key (f1500) starts from there and has to pull far back to the hero view.
+- The cursor rests in the empty chat at about (622, 603) UI px from f1470.
+- At f1500 the Working Panel is closed, the chat is empty, the sidebar shows the "New Chat" row active, and the competitors.pdf chip (green check) sits above the composer.

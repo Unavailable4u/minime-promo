@@ -108,6 +108,20 @@ export const FOCUS_RECTS = {
   controlPause: {x: 760, y: 218, w: 680, h: 592},
   /** The whole chat box and the whole panel, composer included (teamTwoColumn stops at y 728 and cuts the Pause button). */
   controlWide: {x: 256, y: 88, w: 1184, h: 722},
+  // ---- PATCH 14 (S5 Organized: sidebar search, new chat, attachment) ----
+  /**
+   * The sidebar from the top nav down to the lower rows, plus a wide strip of the chat box on its right. The rect is wide
+   * on purpose: the camera centres on it, so the sidebar sits on the left of the stage and the callout chips and the
+   * bottom-centre caption fall over the chat box. The height (585) fixes the zoom at 1.60 and keeps the nav row whole.
+   * The Working Panel is still open up to f1402.
+   */
+  organizeSidebar: {x: 0, y: 48, w: 900, h: 585},
+  /**
+   * The bottom-left of the chat box with the Working Panel CLOSED (f1402 on): chip row (y 706..745), attach button
+   * (272..306, 753..794), mode pill, start of the textarea. The empty chat's faint logo watermark (UI y about 380..435)
+   * is deliberately out of frame. Zoom 2.34.
+   */
+  organizeComposer: {x: 256, y: 600, w: 760, h: 210},
 } as const satisfies Record<string, FocusRect>;
 
 export type FocusName = keyof typeof FOCUS_RECTS;
