@@ -180,8 +180,8 @@ const MetaRow: React.FC<{meta: AssistantMeta; glow: number}> = ({meta, glow}) =>
   );
 };
 
-/** 6x16 streaming caret. The pulse is a pure function of the frame (about 1.25 Hz). */
-const Caret: React.FC<{frame: number}> = ({frame}) => {
+/** 6x16 streaming caret. The pulse is a pure function of the frame (about 1.25 Hz). Markdown (patch 04) reuses it. */
+export const Caret: React.FC<{frame: number}> = ({frame}) => {
   const pulse = 0.5 + 0.5 * Math.sin((frame / FPS) * Math.PI * 2 * 1.25);
   return (
     <span

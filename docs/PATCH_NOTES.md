@@ -297,3 +297,60 @@ CHANGED  docs/PATCH_NOTES.md
 - Patch 04 (Markdown) should render inside <AssistantMessage/>'s body and own the streaming caret.
 - Patch 05 (WorkingPanel, StepCard, HireReview) renders inside the `panel` slot of <AppWindow/> at 480 px wide and refines `FOCUS_RECTS.hiresCard`, `graph`, `stepCards`.
 - Patch 07: build `ComposerProps`, `SidebarRow[]` etc. from the script; use `MODE_MENU_OPEN_FRAMES` for the menu, `shellLayout()` for anchors, and `lerpColor` for any state blend.
+
+---
+
+## PATCH 04 — Text engines (typing, streaming, Markdown, code)
+
+### Files
+- `src/lib/typing.ts` (new), `src/lib/stream.ts` (new), `src/lib/tokenize.ts` (new)
+- `src/ui/CodeBlock.tsx` (new), `src/ui/Markdown.tsx` (new)
+- `src/dev/DevMarkdown.tsx` (new, dev only)
+- `src/config/copy.ts` (+`ANSWERS.team`), `src/ui/AssistantMessage.tsx` (`Caret` is now exported), `src/Root.tsx` (+`DevMarkdown`)
+
+### API
+
+**src/lib/typing.ts** — deterministic typing, a pure function of the frame.
+- `typedText(text, frame, startFrame, opts?)`, `typedCount(...)`: the first character appears ON `startFrame`.
+- `typingEndFrame(text, startFrame, opts?)`: frame of the last character. `typingDuration`, `typingSchedule`, `keystrokeFrames(text, startFrame, opts?)` (one frame per character, for key-tick SFX).
+- `TypingOptions {charsPerSec=30, jitter=0.4, seed=0, durationFrames?}`. `durationFrames` retimes the whole schedule so the last character lands exactly that many frames after the start (rhythm kept) — use it to land typing on a beat.
+- Rhythm: +-40 % seeded gap jitter; pauses after a space (0.7 f), `, ; :` (2.5 f) and `. ! ?` (5 f). The schedule is seeded from the text, cached, and identical on every render worker.
+- `caretVisible(frame, {period=16, lastKeystrokeFrame?, solidFrames=10})`: 16-frame blink, solid for 10 frames after a keystroke.
+
+**src/lib/stream.ts** — "LLM streaming" reveal in bursts.
+- `streamedText(text, frame, startFrame, endFrame, seed=0)`, `streamCount(length, frame, ...)` (= caret index), `streamProgress`, `isStreaming`.
+- Burst weight 8..14 per frame with a 10 % chance of a short stall, normalised so the stream ends EXACTLY on `endFrame`. Monotonic. The 939 character `ANSWERS.team` over frames 10..125 gives about 8 chars/frame, max 11 in one frame.
+
+**src/lib/tokenize.ts** — tolerant JS tokenizer (never throws; unterminated string/regex ends at the line end, block comment/template run to the end). `tokenizeJs(code)`, `tokenizeLines(code)`, `TOKEN_TYPE_COLOR`. Concatenating the token texts always gives back the input. Regex literals use the string color.
+
+**src/ui/CodeBlock.tsx** — `<CodeBlock code lang? trailing? copied? />`; `CODE_BLOCK` (geometry), `codeBlockHeight(lines)`. Header strip (language + Copy icon; `copied` swaps to a green check + "Copied" for the copy-click beat), JetBrains Mono 12.5 / 20, ligatures OFF so `=>` stays two characters.
+
+**src/ui/Markdown.tsx** — `<Markdown text caret? frame? />`, `parseMarkdown`, `parseInline`, `estimateMarkdownHeight(text, widthPx)`, `MD` (style numbers).
+- Supports `#`/`##`/`###`, paragraphs, `**bold**`, `*italic*`, `` `code` ``, `[link](url)`, ordered/bullet lists (2-space indent = nested), `>` quote, `---`, pipe tables with `:---:` alignment, fenced code.
+- Written for GROWING text: all 940 prefixes of `ANSWERS.team` parse and render without a throw and without flashing raw markers (a dangling `**`, `*`, backtick or `[` styles the rest of the line; a lone `#`, `-`, `>`, `1.` or backticks on the last line are held back; an unterminated fence streams as a code block; a table header is a table before its separator arrives).
+- Owns the streaming caret: put it in `<AssistantMessage caret={false}>` and pass `caret` to `<Markdown>`. The caret sits at the end of the last inline run, the last code line or the last table cell, never on a line of its own.
+- `estimateMarkdownHeight(text, innerWidthPx)` is a deterministic height for the auto-scroll (patch 07), no DOM measuring. Complete `ANSWERS.team` at 600 px: estimate 678 vs real 679 (-0.1 %). Wrapped paragraphs are counted from character counts, so expect a few percent on other texts; the bubble's inner width is `0.8 * (listWidth - 32) - 26 - 8 - 26`.
+
+**src/config/copy.ts** + `ANSWERS.team`: the Tier 3 answer (heading, plan list, pricing table, quote, `js` code). The film's script (patch 07) streams this.
+
+**src/dev/DevMarkdown.tsx** (`DevMarkdown`, `DEV_MARKDOWN_FRAMES` 210): frames 0..149 stream `ANSWERS.team` (frames 10..125) into the chat with an estimate-driven scroll; frames 150..209 are a static sheet (estimate vs real height, typing engine, stream counts, a partial-input sample).
+
+### Decisions and conventions
+- Typing and streaming return strings; the UI never reads time. The chat scene computes `visible = streamedText(...)` and hands it to `<Markdown>`.
+- The text is revealed by character, not by token. Markdown is re-parsed every frame (cheap at this size).
+- Emoji in streamed text are not supported by Markdown (Twemoji files are vendored only for the emoji the film uses, and `☕` is not one). Use `<Emoji/>` outside the Markdown body.
+- Links are drawn sky-blue (`TIER_COLORS[1]`) and underlined; the url is never shown.
+
+### Verified
+- `npx tsc --noEmit` passes (strict).
+- Logic checks (esbuild bundle run in node): typing monotonic, first char on the start frame, retime lands on the requested frame; stream monotonic, 0 at start, full at end; every prefix of the answer parses; code tokenizer round-trips every prefix of the code block; partial table, dangling marker, unterminated fence and `**`/backtick cases.
+- DevMarkdown stills at frames 45, 75 (mid-table with caret in the cell), 100 (mid-code with caret), 140 (complete, scrolled), 170 (static sheet).
+
+### Known issues
+- The auto-scroll in DevMarkdown is a direct function of the estimate (it jumps with each new line); the real thing in patch 07 should smooth it with a spring.
+- The table uses auto column widths, so columns reflow while cells fill in (like a real renderer). If that looks too busy in the film, give `<Markdown>` fixed column widths for the table in the answer.
+- Not checked: motion in the Studio (stills only).
+
+### Warnings for the next patches
+- Patch 05 (Working Panel) does not need these engines, but its typed task excerpt can use `typedText`.
+- Patch 07: type the prompts with `typedText(PROMPTS.x, frame, start, {durationFrames})` and place Enter at `typingEndFrame(...) + ~6`; stream answers with `streamedText`; derive the scroll from `estimateMarkdownHeight`.

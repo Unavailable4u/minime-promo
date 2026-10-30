@@ -197,3 +197,43 @@ export const PROMPTS = {
   control: 'Audit that endpoint for security issues.',
   search: 'coffee',
 } as const;
+
+/**
+ * Long streamed answers (patch 04 dev sheet; the script in patch 07 reuses them).
+ * `team` is the Tier 3 answer to PROMPTS.team: heading, plan, pricing table, quote and a code block.
+ */
+export const ANSWERS = {
+  team: [
+    '## Coffee Club — Launch Pack',
+    '',
+    '**Goal:** ship a subscription app that *pays for itself* in the first month.',
+    '',
+    '### 4-week plan',
+    '1. **Week 1 — Validate.** Interview 15 coffee lovers and sketch the signup flow.',
+    '2. **Week 2 — Build.** Ship signup, billing and the delivery calendar.',
+    '3. **Week 3 — Beta.** Invite 50 testers and track churn and `time-to-first-box`.',
+    '4. **Week 4 — Launch.** Open the waitlist, publish pricing, go live.',
+    '',
+    '### Pricing',
+    '| Plan | Bags / month | Price |',
+    '| :--- | :---: | ---: |',
+    '| Starter | 1 | $14 |',
+    '| Regular | 2 | $26 |',
+    '| Pro | 4 | $48 |',
+    '',
+    '> Annual billing saves 15% — worth highlighting at checkout.',
+    '',
+    '### Signup endpoint',
+    '```js',
+    '// POST /signup',
+    "app.post('/signup', async (req, res) => {",
+    '  const {email, plan} = req.body;',
+    '  if (!/^\\S+@\\S+\\.\\S+$/.test(email)) {',
+    "    return res.status(400).json({error: 'Invalid email'});",
+    '  }',
+    '  const user = await db.users.create({email, plan});',
+    '  res.status(201).json({id: user.id});',
+    '});',
+    '```',
+  ].join('\n'),
+} as const;
