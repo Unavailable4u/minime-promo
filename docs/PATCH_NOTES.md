@@ -663,3 +663,116 @@ Overlay (all inside the camera's SCREEN layer, global `frame` prop):
 - The cursor rests at (900, 330) (UI px) from f348. S3's first waypoint (the composer click at f496) travels from there.
 - `S2.nudge` scrolls the chat up 20 px permanently over f455-479, so S3 row positions are shifted: use `layoutAt` / `anchorsAt`, not static rects, for chat rows.
 - The caption ends at `SCENES.S2.end - f(5)` (f474); S3 owns its own caption from f480.
+
+## PATCH 10 — S3a Team: prompt, panel opens, Inspector, tier reveal (f480-699)
+
+### Files created / changed
+```
+REPLACED src/scenes/s3/S3a.tsx   (the patch-08 stub is gone: real camera, cursor and overlay)
+CHANGED  src/config/focus.ts     (+ FOCUS_RECTS teamPanel, teamInspector, teamBadge, teamReveal)
+CHANGED  docs/PATCH_NOTES.md
+```
+`src/scenes/S3Team.tsx` is NOT changed: patch 08 already made it the real wrapper that concatenates S3A/S3B/S3C cameras and cursors. S3b and S3c stubs are untouched.
+
+### Public API
+**src/scenes/s3/S3a.tsx**: `S3a` (overlay, `SceneOverlayProps`), `S3A_CAMERA: CameraKeyframe[]`, `S3A_CURSOR: CursorWaypoint[]`.
+
+Camera (frame = the frame the move STARTS; the spring settles about 25 f later):
+
+| start | target | padding | scaleBias | rotX / rotY | zoom (14 px chat, 12 px panel) |
+|---|---|---|---|---|---|
+| f480 | `instantComposer` | 72 | 1.07 | 1.5 / -2 | 1.60 -> 22.4 px |
+| f536 | `instantComposer` | 72 | 1.07 | 0.6 / 1.6 | orbit only (no zoom change), keeps the typing shot alive |
+| f588 (`S3.userIn - 4`) | `messageList` | 72 | 1.06 | 0 / 1.5 | 1.53 -> 21.4 px |
+| f606 (`S3.panel.open + 2`) | `teamPanel` | 72 | 1 | 0 / -2.5 | 1.95 -> 23.4 px (panel springs open inside this shot) |
+| f624 | `teamInspector` | 110 | 0.9 | 0.5 / -2 | 2.04 -> 24.5 px (panel text) |
+| f654 | `teamBadge` | 90 | 0.62 | 0 / 2 | 2.08 -> 25 px (tier badge morph) |
+| f682 | `teamReveal` | 63 | 1.06 | 0 / 0.5 | 1.61 -> 22.5 px (wide: badge left, routing card + graph right) |
+
+Cursor (logical UI px): click on the textarea at f490 (66% of its width, hover `'textarea'`; the focus ring is already on from S2), slides to (1160, 690) at f520 (out of the way of the typed text), rests under the Inspector card at f636 (hover id `'inspector-step'`), moves down into the still-empty step list (1364, 644) at f670, where S3b should continue.
+
+Overlay (SCREEN layer, global `frame`):
+- `Caption` `CAPTIONS.team` ("Big asks? A whole team." + sub "Specialists staffed automatically.") f510 -> f604 (`S3.panel.open`). It must be gone before the panel opens: later shots put the step cards where the caption sits.
+- `KeyCap` starts at `S3.enter - KEYCAP_ENTER_FRAMES` (f586), anchored to the Send button (UI space).
+- `Callout` `CALLOUTS.inspectorReads` f625-660, dot on the bottom edge of `stepCardRect(0)`, chip BELOW the card (side `bottom`): the chip sits in the empty step list, never over the card text.
+- `Glow` bloom on the tier badge from `S3.reveal.glowPeak - 2` (f668), 28 f.
+- `Callout` `CALLOUTS.tier3Team` f668-700 on the tier badge (dot after the elapsed time, `BADGE_TEXT_END` 196), side `right`. Renders nothing while `anchorsAt(frame).tierBadge` is null (before f656).
+
+**src/config/focus.ts**: `teamPanel {760, 48, 680, 480}`, `teamInspector {900, 200, 540, 380}`, `teamBadge {262, 300, 520, 180}`, `teamReveal {256, 100, 1184, 380}`.
+
+### Decisions and conventions
+- Deviations from the guide: (1) the composer click is f490, not f496: `S3.focus` is f484 and typing starts f496; f490 lets the ripple land before the first key without fighting the camera move (focus is already on, so nothing else depends on it). (2) The "Tier 3 → specialist team" callout starts f668, not f660: its dot is measured from the finished badge, and at f664 the badge still reads "routing…", so the dot floated 60 px past it. (3) The caption leaves at f604 instead of living through the reveal (see above). (4) The step-card callout sits below the card, not beside it, because a side chip would cover the card's name text at this zoom.
+- The cursor leaves the Inspector card at f670 so it never covers the expanded summary (f652-696).
+- The tier-badge morph is shot close (teamBadge) and the routing-card text change ("Tier 3 · adaptive") is only visible from the f682 wide shot on.
+
+### Verified
+- `npx tsc --noEmit` passes (strict).
+- Stills rendered at f496, 510, 590, 606, 620, 640, 650, 664, 668, 672, 676, 680, 688, 696, 700 with the sandbox Chromium. Typing is 22 px, the caption clears the composer, the key cap lands on Send, the Inspector callout clears the card, the badge callout clears the user bubble.
+- f680 rendered twice is byte-identical (MD5). No Math.random, Date, setTimeout or CSS transitions in the file.
+
+### Known issues
+- Motion was not scrubbed in the Studio and no contact sheet video was made: stills and numbers only. Scrub f480-700 once.
+- `messageList` at f588 is 21.4 px chat text, a hair under the 22 px bar (same shot as S2, and the text there is a one-line bubble).
+- The zoom column above was first written from estimates; patch 11 recomputed every scale with `poseForKeyframe` and corrected the table. It also raised the `teamInspector` bias from 0.8 to 0.9 (1.81 -> 2.04) so the 12 px panel text clears 22 px; `teamInspector` Inspector callout chip still ends 82 px above the bottom edge.
+- `BADGE_TEXT_END` (196) is a hard-coded offset to land the dot after the elapsed time. If the tier label or `META_TEXT` changes, re-tune it.
+- The new `team*` rects are static, measured at the S3 layout (two-line user bubble at y 300, badge at y 386). If the prompt wraps differently, re-check them with `anchorsAt`.
+
+### Warnings for the next patches (11+)
+- S3a's last camera key is `teamReveal` at f682 (settles about f707). S3b's first key (f690, `workingPanel`) adds a step on top of it, so the handoff is continuous.
+- The cursor rests at about (1364, 644) from f670. The Inspector card is expanded f652-706 (closes f696-706), which shifts the cards below it; use `stepCardRect(i)` only for collapsed lists.
+- The chat is a two-column layout from f640 (panel 480 px, chat box 704 px).
+
+## PATCH 11 — S3b Team: the run and the recheck (f690-915)
+
+### Files created / changed
+```
+REPLACED src/scenes/s3/S3b.tsx   (the patch-08 stub is gone: real camera, cursor and overlay)
+CHANGED  src/config/focus.ts     (+ FOCUS_RECTS teamRun, teamGraph, teamRecheck, teamTwoColumn)
+CHANGED  src/scenes/s3/S3a.tsx   (teamInspector scaleBias 0.8 -> 0.9, zoom comment corrected; nothing else)
+CHANGED  docs/PATCH_NOTES.md     (also corrects the zoom table of patch 10)
+```
+`src/scenes/S3Team.tsx` is NOT changed (it already concatenates S3A/S3B/S3C). The S3c stub is untouched.
+
+### Public API
+**src/scenes/s3/S3b.tsx**: `S3b` (overlay, `SceneOverlayProps`), `S3B_CAMERA: CameraKeyframe[]`, `S3B_CURSOR: CursorWaypoint[]`.
+
+Camera (frame = the frame the move STARTS; the spring settles about 25 f later):
+
+| start | target | padding | scaleBias | rotX / rotY | zoom (panel text 12 px / graph labels 11.4 px) |
+|---|---|---|---|---|---|
+| f690 | `teamRun` | 72 | 1 | 0.5 / -2.5 | 2.23 -> 26.8 / 25.4 px (routing card, graph, first step cards, chat strip on the left) |
+| f736 | `teamGraph` | 72 | 0.78 | 0 / 1.5 | 2.21 -> 26.5 / 25 px (graph grows: strategist -> researcher + code_writer + worker pool) |
+| f786 | `teamGraph` | 72 | 0.86 | 0.8 / 0.2 | 2.4 (camera maximum) -> 28.8 / 27 px (slow push while test_writer arrives) |
+| f830 | `teamRecheck` | 72 | 1.05 | 0 / 1.5 | 1.82 -> 21.8 / 20.7 px (whole graph + step list; lands on the flag at f856) |
+| f888 | `teamTwoColumn` | 72 | 1 | 0 / 0.5 | 1.46 -> 17.5 px (pull-back: chat column left, panel right; settled by f913) |
+
+Cursor (logical UI px): continues from S3a (rests near (1364, 644) from f670). It settles on the empty middle of the strategist card at f716 (hover id `'step-strategist'`) and follows the verifier card to f866 (hover id `'step-verifier'`, where the card sits after its scroll). Both targets are computed from the same app state the panel draws (`stepCardAt`), never typed in.
+
+Overlay (SCREEN layer, global `frame`):
+- `Callout` `CALLOUTS.verifierSendsBack` f862-f892, dot at the left edge of the verifier step card (follows the card as the list scrolls: `stepCardAt(frame, 'verifier')`), side `left`, so the chip sits over the empty lower part of the chat column and never over the card.
+- `Glow` success bloom on the Output node (graph slot position, UI space) from f916, 30 f, intensity 0.75, crimson (the Glow component has no other color; the node's own ring turns green at f920 from the app state).
+- The amber recheck edge, the error-tinted verifier card (6 f), the "-> sent back to recheck code_writer" note, the re-run flip and the converging particle streams all come from `ChatApp` / `script.ts`: this scene only frames them.
+
+**src/config/focus.ts**: `teamRun {760, 150, 680, 420}`, `teamGraph {880, 200, 560, 330}`, `teamRecheck {760, 240, 680, 540}`, `teamTwoColumn {256, 88, 1184, 640}` (logical UI px).
+
+### Decisions and conventions
+- Graph node positions in UI space: slot `panelLayout().graph` + `graphFit()` offset + (node - viewBox) * scale (1.0364). `S3b.tsx` has a private `graphNodeUi(id)`; if S3c needs a graph point (the "Every step traced" callout), copy or lift it into `anchors.ts`.
+- `stepCardAt(frame, key)` (private to S3b) sums `stepCardHeight()` of the cards above and subtracts `stepsScrollY`. It is exact for the S3 run (checked against stills).
+- Deviations from the guide's prompt: (1) the recheck shot is a wide `teamRecheck` (graph + step list together, 21.8 px) instead of the step-card list alone: the amber edge and the verifier card have to be in one frame to make the point. (2) The callout is anchored to the verifier STEP CARD (chip over the chat) instead of the amber edge: every free spot near the graph edge is covered by nodes or the pool label. (3) The Output bloom is crimson, not green (see above).
+- No frame holds still longer than about 1.5 s: the camera keys are 46, 50, 44 and 58 frames apart, with orbit / push between them.
+
+### Verified
+- `npx tsc --noEmit` passes (strict).
+- Stills rendered with the sandbox Chromium at f640, 650, 700, 740, 800, 850, 866, 872, 878, 890, 905, 916, 924. Graph labels read at 25 px or more during the growth, the recheck shot shows the amber edge, the error ring on the verifier and the note together, the callout chip clears the card, the pull-back shows both columns.
+- f878 rendered twice is byte-identical (MD5). No Math.random, Date, timers or CSS transitions in `src/scenes/s3/`.
+
+### Known issues
+- Motion was not scrubbed in the Studio: stills and numbers only. Scrub f690-916 once, especially the handoffs at f830 and f888.
+- At f830-856 the top of the graph (market_researcher label) sits at the very edge of the frame; it is in the depth-of-field periphery.
+- The pull-back (f888+) is a 17.5 px shot. Legibility of the final answer is S3c's job (it zooms back in at f916).
+- The `team*` rects are static, measured at the S3 layout. If the graph layout or step text changes, re-check them.
+
+### Warnings for the next patch (12)
+- S3b ends settled on `teamTwoColumn` (padding 72, rotY 0.5). S3c's first key (about f916) starts from it.
+- The cursor rests on the verifier card at about (1232, 685) from f866. S3c must travel it to "Save as template" (`anchorsAt(frame).saveTemplate`) for the f1056 click.
+- From f916 the answer streams into the chat column (left); the bloom is a screen-layer overlay that ends at f946.

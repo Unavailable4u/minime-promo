@@ -61,6 +61,24 @@ export const FOCUS_RECTS = {
   instantComposer: {x: 256, y: 620, w: 1184, h: 160},
   instantChat: {x: 10, y: 130, w: 1380, h: 460},
   instantAnswer: {x: 250, y: 150, w: 720, h: 340},
+  // ---- PATCH 10 (S3a Team: prompt, panel opens, Inspector, tier reveal) ----
+  /** The Working Panel opening: the top of the panel (header .. graph) plus a strip of the reflowing chat on its left. */
+  teamPanel: {x: 760, y: 48, w: 680, h: 480},
+  /** The Inspector push: graph slot + the first step card, with a little chat on the left. */
+  teamInspector: {x: 900, y: 200, w: 540, h: 380},
+  /** The tier badge of the S3 answer with the user bubble above it (chat column, panel open). */
+  teamBadge: {x: 262, y: 300, w: 520, h: 180},
+  /** Wide two-column shot: chat badge on the left, routing card + graph on the right. */
+  teamReveal: {x: 256, y: 100, w: 1184, h: 380},
+  // ---- PATCH 11 (S3b Team: the run and the recheck) ----
+  /** The top of the Working Panel (routing card .. graph .. first step cards) with a strip of chat on its left. */
+  teamRun: {x: 760, y: 150, w: 680, h: 420},
+  /** The routing graph slot with a little chat on the left (graph units x 1.036: slot x 972..1428, y 218..506). */
+  teamGraph: {x: 880, y: 200, w: 560, h: 330},
+  /** Recheck moment: the lower graph (verifier -> code_writer edge) and the step list, chat strip on the left for the callout chip. */
+  teamRecheck: {x: 760, y: 240, w: 680, h: 540},
+  /** Pull-back: the whole chat column on the left, the whole panel on the right. */
+  teamTwoColumn: {x: 256, y: 88, w: 1184, h: 640},
 } as const satisfies Record<string, FocusRect>;
 
 export type FocusName = keyof typeof FOCUS_RECTS;
