@@ -354,3 +354,59 @@ CHANGED  docs/PATCH_NOTES.md
 ### Warnings for the next patches
 - Patch 05 (Working Panel) does not need these engines, but its typed task excerpt can use `typedText`.
 - Patch 07: type the prompts with `typedText(PROMPTS.x, frame, start, {durationFrames})` and place Enter at `typingEndFrame(...) + ~6`; stream answers with `streamedText`; derive the scroll from `estimateMarkdownHeight`.
+
+---
+
+## PATCH 05 — Working Panel, step cards, routing card, Hire Review
+
+### Files
+- `src/ui/panelLayout.ts` (new), `src/ui/StepCard.tsx` (new), `src/ui/RoutingCard.tsx` (new), `src/ui/WorkingPanel.tsx` (new), `src/ui/HireReview.tsx` (new)
+- `src/dev/DevPanel.tsx` (new, dev only)
+- `src/config/copy.ts` (+`HIRE_ROLES`), `src/config/focus.ts` (`graph`, `stepCards` refined), `src/Root.tsx` (+`DevPanel`)
+
+### API
+
+**src/ui/panelLayout.ts** — geometry of the panel (UI logical px, panel fully open: x 960..1440). `PANEL` (numbers), `panelLayout()` → `{header, collapseButton, traceLink, excerpt, routingCard, saveTemplate, graph, steps}` and `stepCardRect(i)` (collapsed card i of the list). Take cursor targets and callout anchors from here, never from the DOM. Values: traceLink {972,100,150,16}, excerpt {972,122,456,16}, routingCard {972,146,456,30}, saveTemplate {972,184,132,24}, graph {972,218,456,288}, steps {972,516,456,282}; step card 34 px high, gap 6 (7 collapsed cards = 274 px fit in the 282 px list). The layout assumes the routing card CLOSED; opening it pushes everything below down.
+
+**src/ui/WorkingPanel.tsx** — `<WorkingPanel cascade? taskExcerpt routing? hover? savePress? graph? stepsScrollY?>{<StepCard/>...}</WorkingPanel>`. Pass it as `panel` of `<AppWindow panelWidth>`; it is always 480 px wide and AppWindow clips it while it opens. Left border is an overlay (content keeps the exact layout numbers).
+- `cascade` = frames since the cascade started; item i (header, trace link, excerpt, routing card, save row, graph slot) fades in from `3 * i` over 10 frames. Constants `PANEL_CASCADE_STAGGER` (3), `PANEL_CASCADE_ITEM_FRAMES` (10), `PANEL_CASCADE_FRAMES` (25). Default: finished.
+- `hover {collapse?, trace?, save?}`, `savePress` 0..1 (press in and out; the row dips to scale .96). `graph` is a node that fills the 456 x 288 slot (patch 06). `stepsScrollY` scrolls the clipped step list.
+- Step cards are children; each carries its own entrance (`appear`), so the script decides when a card appears.
+
+**src/ui/StepCard.tsx** — `<StepCard name status tier? ms? frame? appear? expand? summary? note? errorFlash? from? flip? hover? />`
+- `status`: `done | running | error | awaiting | pending`; chrome from `STEP_CARD` in theme.ts (`awaiting` = dashed border, pulsing). Role emoji from `getRoleCategory(name)`, name color from `roleNameColor(name)` (error: red-400). `name` is printed as given: `"strategist"`, `"code_writer"`, `"Inspector — classifying task"`.
+- Status text: `running` (amber, pulsing), `done · 6933ms` (green + neutral ms), `error · 4210ms`, `awaiting approval`, `pending`.
+- `expand` 0..1 unfolds the body (summary neutral-300, `note` amber, e.g. "→ sent back to recheck code_writer") and turns the chevron. `stepBodyHeight()` / `stepCardHeight()` give the heights for scroll math.
+- `errorFlash` 0..1 tints chrome and name toward error (drive it `1 - ramp(f, 0, STEP_ERROR_FLASH_FRAMES)` = 6 frames). `from` + `flip` 0..1 flips a card between statuses with a vertical text mask (re-run done → running; `STEP_FLIP_FRAMES` = 8).
+
+**src/ui/RoutingCard.tsx** — `<RoutingCard tier? fromTier? morph? open? details? hover? appear? />`. "Tier 3 · adaptive" (neutral-300) + " · routing trace" (neutral-600) with a rotating chevron; `tier="instant"` reads "Instant response — no pipeline · routing trace". `fromTier` + `morph` cross-mask the text when the Inspector decides; `open` + `details` unfold trace lines. `routingCardHeight()` for the opened height.
+
+**src/ui/HireReview.tsx** — `<HireReview reveal? collapse? hover? approvePress? miniStatus? frame? />`, 720 x 380 (= `FOCUS_RECTS.hiresCard`). Header (title + "5 roles · est. 18k tokens"), five role rows (emoji tile, role name in role color, purpose, `~4.2k tokens`), buttons "Edit" (ghost) and "Approve & run" (crimson; hover = `ACCENT.hover`, press = `ACCENT.active` + scale .96).
+- `reveal` = frames since the reveal started: header 0, row i at `4 * (i + 1)`, buttons last (`HIRE_ROW_STAGGER` 4, `HIRE_ROW_FRAMES` 10, `HIRE_REVEAL_FRAMES` 34). Default: finished.
+- `collapse` 0..1 morphs the card to the 720 x 168 mini-trace (five compact rows: dot, emoji, role, status). `miniStatus` sets each row `pending | running | done`.
+- `hireReviewLayout()` returns card-local rects for `edit` {x 532, y 332, w 64, h 32}, `approve` {x 596, y 332, w 124, h 32} and the five rows. Add the card's absolute position (272, 166 in the chat box with a one-line prompt) for cursor targets.
+
+**src/config/copy.ts** + `HIRE_ROLES` (security_auditor, code_reviewer, fixer, report_writer, responder; purposes and token estimates summing to 18k). **src/config/focus.ts**: `graph` {972,218,456,288}, `stepCards` {972,516,456,282}.
+
+**src/dev/DevPanel.tsx** (`DevPanel`, `DEV_PANEL_FRAMES` 360, 60 frames per state): 0 panel opens + 7 steps in mixed statuses (done, awaiting, running, error, pending), 1 verifier flash + expand + note and a code_writer done → running flip, 2 routing card morph (instant → adaptive) + details, 3 Hire Review reveal + hover Edit + press Approve (with the `hiresCard` focus rect drawn over it: it matches), 4 collapse to the mini-trace, 5 anchors (every `panelLayout()` rect over the real DOM).
+
+### Decisions and conventions
+- The task brief sections the guide points at (MASTER §6.4/§6.5, Appendix D3/D4) were not available in this session, so the visual numbers come from the patch prompt plus the existing theme (`STEP_CARD`, role colors) and the 7 steps / 5 hires are authored: steps = Inspector, strategist, market_researcher, code_writer, test_writer, verifier, documentation_writer; hires = the Audit scene roles above. If your D3/D4 text differs (names, purposes, ms), edit `HIRE_ROLES` and the dev data; no component depends on them.
+- Order inside the panel (top to bottom): header, trace link, excerpt, routing card, save row, graph slot, step cards. This follows the patch prompt for the top block and the old `focus.ts` (graph above the step list).
+- Durations print as `Math.round(ms) + "ms"` ("done · 6933ms"). The script (patch 07) owns the numbers.
+- Nothing here reads the frame to decide story: pulses (running text, awaiting border, mini running dot) are the only frame-driven bits.
+- `→` in the recheck note renders with the vendored Inter; if a different font subset drops it, swap the note for an inline SVG arrow.
+
+### Verified
+- `npx tsc --noEmit` passes (strict).
+- DevPanel stills at frames 55, 66, 92, 134, 170, 215, 270, 290, 330: panel cascade and 7 statuses, error flash, expanded verifier with the recheck note, done → running flip mid-mask, routing text morph and open details, Hire Review (reveal, hover, press), mini-trace, and the anchor overlay (all `panelLayout()` rects line up with the DOM).
+
+### Known issues
+- The routing graph slot is a placeholder (patch 06 fills it).
+- `StepCard` body height is estimated from character counts (about 6.3 px per character at 12 px); a body whose text wraps differently from the estimate gets a few px of slack at full expand.
+- The expanded verifier card pushes cards below it out of the clipped list; the script should scroll with `stepsScrollY` (DevPanel state 1 does it by hand).
+- Not checked: motion in the Studio (stills only).
+
+### Warnings for the next patches
+- Patch 06: render the graph into the 456 x 288 slot (`graph` prop); its card chrome (rounded 8, #262626, bg #0a0a0a) is the graph's own business.
+- Patch 07: build `StepCard` props from the script (status, ms, expand, flash, flip) and `routing` from the tier reveal; use `PANEL_CASCADE_FRAMES` and `HIRE_REVEAL_FRAMES` for scene timing, `panelLayout()` / `stepCardRect()` / `hireReviewLayout()` for cursor and callout anchors.

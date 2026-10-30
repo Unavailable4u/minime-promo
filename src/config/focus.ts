@@ -19,8 +19,9 @@
  * the composer with the panel open should add its own key (for example `composerPanelOpen`:
  * {x: 256, y: 736, w: 704, h: 74}) instead of reusing `composer`.
  *
- * `graph` and `stepCards` are still estimates from the original layout; the Working Panel patches (05, 06)
- * refine them.
+ * PATCH 05 refined `graph` and `stepCards` to the real Working Panel geometry (src/ui/panelLayout.ts, drawn over
+ * the DOM by DevPanel state 5). The other panel parts (traceLink, routingCard, saveTemplate, collapse button) are
+ * exported by `panelLayout()` and `stepCardRect(i)`; Hire Review buttons by `hireReviewLayout()` (card-local).
  */
 
 export type FocusRect = {
@@ -46,10 +47,10 @@ export const FOCUS_RECTS = {
   assistantBadge: {x: 268, y: 164, w: 380, h: 40},
   /** The whole Working Panel (header, routing graph, step cards). Panel open. */
   workingPanel: {x: 960, y: 48, w: 480, h: 762},
-  /** The live routing graph card at the top of the Working Panel. */
-  graph: {x: 972, y: 100, w: 456, h: 300},
-  /** The scrolling list of step cards under the graph. */
-  stepCards: {x: 972, y: 408, w: 456, h: 394},
+  /** The routing graph slot of the Working Panel, under the routing card and "Save as template" (patch 05, panelLayout.ts). */
+  graph: {x: 972, y: 218, w: 456, h: 288},
+  /** The clipped step-card list under the graph: fits all 7 collapsed cards (34 px, gap 6); scroll with stepsScrollY. */
+  stepCards: {x: 972, y: 516, w: 456, h: 282},
   /** The mode picker dropdown (opens upward) together with the mode button under it. */
   modeMenu: {x: 314, y: 467, w: 224, h: 327},
   /** The "Review staffed roles" hire review card inside the chat box. */

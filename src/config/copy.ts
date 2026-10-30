@@ -237,3 +237,15 @@ export const ANSWERS = {
     '```',
   ].join('\n'),
 } as const;
+
+/**
+ * The five staffed roles of the "Review hires" card (patch 05, brief Appendix D4): the Audit task of scene S4.
+ * `tokens` sum to the 18k of UI_TEXT.hireReviewSubtitle.
+ */
+export const HIRE_ROLES = [
+  {name: 'security_auditor', purpose: 'Scans the endpoint for injection, auth and rate-limit gaps', tokens: '4.2k'},
+  {name: 'code_reviewer', purpose: 'Reads the handler for bugs, unsafe patterns and style', tokens: '3.6k'},
+  {name: 'fixer', purpose: 'Patches every issue the audit and the review find', tokens: '4.4k'},
+  {name: 'report_writer', purpose: 'Turns findings and fixes into a clear report', tokens: '3.4k'},
+  {name: 'responder', purpose: 'Writes the final answer back into the chat', tokens: '2.4k'},
+] as const;
