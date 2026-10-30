@@ -832,3 +832,64 @@ Overlay (SCREEN layer, global `frame`):
 - S3 ends settling on `teamTwoColumn` (padding 72, rotY 0.5). The chip is still wiping out and the toast is still on screen (to f1100) while S4 starts, so keep the top-left corner of the stage (x < 650, y < 150) and the area left of the panel at y 230-290 free of S4 overlays for the first 20 frames.
 - The cursor rests at about (1034, 205) UI px (over the Save row) from f1056. S4's first waypoint (the mode-picker click at f1104) travels from there.
 - The chat is scrolled to the bottom of the S3 answer at f1080 (`scrollAt` about 651); `layoutAt` / `anchorsAt` give the real row tops for S4.
+
+---
+
+## PATCH 13 — S4 Control (f1080-1319)
+
+### Files created / changed
+```
+REPLACED src/scenes/S4Control.tsx   (the patch-08 stub is gone: real camera, cursor and overlay)
+CHANGED  src/config/focus.ts        (+ FOCUS_RECTS controlComposer, controlMenu, controlHeader, controlHire, controlPause, controlWide)
+CHANGED  docs/PATCH_NOTES.md
+```
+`src/scenes/index.ts`, `src/MiniMePromo.tsx`, `src/config/script.ts` and every app / fx file are NOT changed. S4Control keeps its three patch-08 export names (`S4Control`, `S4_CAMERA`, `S4_CURSOR`).
+
+### Public API
+**src/scenes/S4Control.tsx**: `S4Control` (overlay, `SceneOverlayProps`), `S4_CAMERA: CameraKeyframe[]`, `S4_CURSOR: CursorWaypoint[]`.
+
+Camera (frame = the frame the move STARTS; the spring settles about 25 f later):
+
+| start | target | padding | scaleBias | rotX / rotY | zoom on the 1080p frame |
+|---|---|---|---|---|---|
+| f1080 | `controlComposer` | 72 | 0.85 | 1.2 / -2 | 2.14 |
+| f1096 | `controlMenu` | 72 | 0.85 | 0 / 1.5 | 2.09 (menu opens f1104) |
+| f1144 | `controlHeader` | 72 | 0.8 | 0.6 / -1.5 | 2.40 (Review hires toggle) |
+| f1172 | `controlComposer` | 72 | 0.9 | 0.5 / 1.2 | 2.27 (textarea click f1181, typing f1183-1213, Enter f1217) |
+| f1220 | `controlHire` | 72 | 1 | 0 / 1.5 | 1.99 (hire card, Approve click f1244) |
+| f1248 | `controlPause` | 72 | 1 | 0.3 / -2 | 1.58 (graph + steps + Pause button; Pause f1262, Resume f1290) |
+| f1296 | `controlWide` | 72 | 1 | 0 / 0.5 | 1.30 (pull-back, settled on the f1320 beat) |
+
+Cursor (UI logical px, every point derived from `anchorsAt()`): arrives at the mode pill f1098 (hover `mode`), clicks f1104; hovers Simple f1120, Fast f1125, Expert f1129, Beast f1132, Expert f1137 (same frames as `S4.mode.hovers`), clicks Expert f1140; "Review hires" toggle hover f1158, click f1166; textarea click f1181 (right part of the textarea, clear of the typed text); Approve hover f1238, click f1244 (tip on the lower right of the button so the label stays readable); Send/Pause hover f1256, click f1262; steps aside f1272; back on f1284, Resume click f1290. Hover ids are `mode`, `review`, `textarea`, `approve`, `send` (they match `HOVER_WINDOWS`) plus free-form `menu-*` / `paused-graph`.
+
+Overlay (SCREEN layer, global `frame`):
+- `Caption` `CAPTIONS.control` f1080-f1142 (leaves before the camera goes up to the header).
+- `Callout` `CALLOUTS.modes` f1108-f1142 on the Fast row's right edge (side `right`).
+- `KeyCap` on the Enter at `S4.enter - KEYCAP_ENTER_FRAMES`, above the Send button.
+- `Callout` `CALLOUTS.approveFirst` f1228-f1256 under the Approve button (side `bottom`, distance 60). The anchor follows the scrolling card and freezes at f1252 (the card collapses and the button disappears).
+- `Callout` `CALLOUTS.pauseAnytime` f1258-f1288 above the Pause / Resume button (side `top`).
+
+**src/config/focus.ts** (panel OPEN, logical UI px): `controlComposer {256,690,704,120}`, `controlMenu {256,450,704,380}`, `controlHeader {520,48,560,170}`, `controlHire {262,150,700,470}`, `controlPause {760,218,680,592}`, `controlWide {256,88,1184,722}`.
+
+### Decisions and conventions
+- The Working Panel is open for all of S4 (it opened at f604, S5 closes it at f1402), so the existing panel-closed `composer` rect cannot be used; new `control*` rects were derived from `anchorsAt()`.
+- `controlMenu` is centred at y 640 so the window bottom stays above the caption (the caption sits on the empty stage under the window).
+- The end shot is `controlWide`, not `teamTwoColumn` (that rect stops at y 728 and cuts the Pause button).
+- Deviation from the guide: no graph close-up of its own; `controlPause` holds graph, step cards and the Send button in one shot so the Pause click and the paused graph are both visible.
+- Nothing here reads `useCurrentFrame()`; every component gets the global `frame` prop.
+
+### Verified
+- `npx tsc --noEmit` passes (strict).
+- Stills (Chromium from `@sparticuz/chromium` through `--browser-executable`) at f1082, 1092, 1100, 1104, 1125, 1140, 1150, 1160, 1166, 1181, 1200, 1217, 1224, 1230, 1236, 1240, 1244, 1256, 1262, 1265, 1270, 1276, 1284, 1295, 1310, 1319.
+
+### Known issues
+- Motion was not scrubbed in the Studio: stills and numbers only. Scrub f1080-1320, especially the hand-offs at f1096, f1144, f1172, f1220, f1248 and f1296.
+- The graph slot is empty at f1256-1265: that is the app's own panel cascade (script.ts `S4.panel`), the graph is drawn by f1270.
+- The cursor goes from the toggle (f1166) to the textarea (f1181) in 15 f over about 700 px: a fast whip, forced by the script's frames.
+- The Review hires shot shows a band of empty stage above the window (the window top is the target).
+- After the f1244 Approve click and the f1252 callout freeze, the last two re-renders (callout distance 60, cursor tip 0.9 / +24) were only type-checked, not re-viewed in a still at f1244.
+
+### Warnings for the next patch (14)
+- S4 ends settled on `controlWide`; S5's first camera key (sidebar search at f1328) starts from it.
+- The cursor rests on the Pause button at about (902, 774) UI px from f1290.
+- The Working Panel is still open at f1320; S5 closes it at f1402.

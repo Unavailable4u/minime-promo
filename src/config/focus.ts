@@ -89,6 +89,25 @@ export const FOCUS_RECTS = {
   answerStream: {x: 262, y: 216, w: 700, h: 520},
   /** The top of the Working Panel: routing card, "Save as template" row and the whole routing graph. */
   teamSave: {x: 760, y: 104, w: 680, h: 430},
+  // ---- PATCH 13 (S4 Control: mode menu, Review hires, approve, pause / resume) ----
+  // The Working Panel is OPEN for the whole of S4 (it opened at f604), so the chat box is x 256..960 and the composer
+  // is 704 px wide. The mode button is left-aligned in the composer, so the menu rectangle is the same as with the
+  // panel closed. Every rect below was checked against anchorsAt() (src/config/anchors.ts).
+  /** Composer with the panel open: attach, mode pill (314..426), textarea (434..852), send (860..944). */
+  controlComposer: {x: 256, y: 690, w: 704, h: 120},
+  /**
+   * The mode menu (x 314..538, y 467..745, opens upward) with the mode pill under it. The rect is wide on the right so
+   * the callout chip has room, and its centre sits at y 640 so the caption stays on the empty stage under the window.
+   */
+  controlMenu: {x: 256, y: 450, w: 704, h: 380},
+  /** Chat header with the "Review hires" toggle (836..944, 55..81) and a strip of the panel header on its right. */
+  controlHeader: {x: 520, y: 48, w: 560, h: 170},
+  /** The Review staffed roles card once it has scrolled into place (card y about 206..586), with the user bubble above. */
+  controlHire: {x: 262, y: 150, w: 700, h: 470},
+  /** The routing graph, the step cards and the Pause / Resume button (860..944, 753..794): one shot for the pause. */
+  controlPause: {x: 760, y: 218, w: 680, h: 592},
+  /** The whole chat box and the whole panel, composer included (teamTwoColumn stops at y 728 and cuts the Pause button). */
+  controlWide: {x: 256, y: 88, w: 1184, h: 722},
 } as const satisfies Record<string, FocusRect>;
 
 export type FocusName = keyof typeof FOCUS_RECTS;
