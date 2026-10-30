@@ -957,3 +957,44 @@ Overlay (SCREEN layer, global `frame`):
 - S5 ends settled on `organizeComposer` (scaleBias 1.07, zoom clamped to 2.4, rotY -1.2). S6's first camera key (f1500) starts from there and has to pull far back to the hero view.
 - The cursor rests in the empty chat at about (622, 603) UI px from f1470.
 - At f1500 the Working Panel is closed, the chat is empty, the sidebar shows the "New Chat" row active, and the competitors.pdf chip (green check) sits above the composer.
+
+## PATCH 15 — S6 Outro (f1500-1739)
+
+### Files created / changed
+- `src/config/outro.ts` (NEW): `OUTRO` (frames, all wrapped in `f()`), `OUTRO_LAYOUT` (stage px), `OUTRO_FLOAT` (window float amplitudes and periods).
+- `src/config/focus.ts`: adds `outroHero {x:-168, y:7, w:1776, h:936}` (zoom 1.0 at padding 72 / scaleBias 1; the window sits about 70 px above the stage centre so the caption has empty stage under it).
+- `src/scenes/S6Outro.tsx` (REPLACES the stub): camera, cursor exit, grid, nav sweep, floating/defocusing window, overlay.
+- `src/ui/ChatApp.tsx`: new optional props `navSweep?: number | null` and `navSweepStrength?: number`, passed ChatApp -> ChatAppView -> `<TopNav sweep sweepStrength />`.
+- `src/scenes/index.ts`: imports/re-exports `S6_NAV_SWEEP`, new export `navSweepAt(frame): number | null`.
+- `src/MiniMePromo.tsx`: `<ChatApp navSweep={navSweepAt(frame)} />`.
+
+### Public API
+- `S6_CAMERA: CameraKeyframe[]` — 4 keys, all target `outroHero`, padding 72: f1500 (scaleBias .96, rotX 6, rotY -13), f1536 (1.06, 4, -7), f1596 (1.06, 2, -3), f1664 (.96, 3, 3). S6 uses the extended tilt limits (14 deg).
+- `S6_CURSOR: CursorWaypoint[]` — one off-screen waypoint (UI x -760) arriving f1535; the cursor leaves to the left, so it never sits sharp over the blurred window.
+- `S6_GRID: GridOpacityFn` — `ramp(frame, 1500, 1540)`, stays on to the end.
+- `S6_WINDOW: WindowStyleFn` — identity at f1500 (`opacity: 1`, zero transform), float ramps in over 30 f; defocus f1560-1600 = `blur(0 -> 10px) brightness(1 -> .35)`.
+- `S6_NAV_SWEEP(frame): number | null` — null outside f1515-1560, else eased 0..1.
+- `S6Outro` overlay (SCREEN layer, global `frame`): Spotlight on `fullWindow` f1510-1545 (intensity .12), Caption `CAPTIONS.outro` f1515-1582 (`bottom` 88), Glow bloom at f1650, the lockup (S0 logic with OUTRO timings), KineticText tagline (`HEADLINE.full`, highlight `team.`, no underline), CTA pill (opens from its centre) + url, black fade f1710-1739 as the LAST element.
+
+### Timeline
+f1500 cut + pull-back + cursor leaves | f1510-1545 light sweep across the window | f1515-1560 light across the nav tab names | f1515-1582 caption | f1560-1600 defocus | f1600-1646 pen draw (path 2 +4 f) | f1650 beat 110: bloom + 2% hit, wordmark slides out (1650-1672), lockup rises/shrinks (1660-1682) | f1670 tagline | f1678-1696 CTA pill opens, label f1684, url f1690 (12 f rises) | everything on screen by f1702 | f1650-1710 logo glow breathes, then holds | f1710-1739 fade to black.
+
+### Decisions and deviations
+- CTA timings in `outro.ts` were tightened from the handoff values (tagline 1674 -> 1670, CTA 1684-1702 -> 1678-1696, label 1690 -> 1684, url 1698 -> 1690, new `riseFrames` = 12). With the originals the url was still rising when the fade started (f1710), so the finished end card never held. Now the full lockup is complete from about f1702, and f1706 is the best POSTER / thumbnail frame.
+- The brief says both "fade to black f1710-1739" and "last 30 frames are a clean thumbnail-worthy hold". They conflict: the fade is kept as authored, the clean frame is f1702-1709.
+- Nav sweep is decorative: at the hero zoom (about 1.0-1.06) the tab names are about 12 px on screen. It reads as a moving light, and at f1545 the names near the right end are readable.
+- The window's `rotateZ` roll and the `translate3d` depth bob use the window's own `perspective(1800px)`, not the camera's.
+
+### Verified
+- `npx tsc --noEmit` passes (strict).
+- Stills (Chromium from `@sparticuz/chromium`, `--gl=swangle`) at f1500, 1515, 1530, 1545, 1560, 1580, 1620, 1660, 1700, 1706, 1730, all looked at: hand-off from the S5 composer close-up, tilted hero view with caption clear of the window, sweep + specular band, defocused window, pen draw, wordmark slide, tagline + pill + url complete at f1706, near-black at f1730.
+- f1545 rendered twice is byte-identical (MD5 8e974386af1878acb895b927ac7ed86e). No Math.random, Date, timers, CSS transitions/animations or network in the new files.
+
+### Known issues
+- Motion was not scrubbed in the Studio: stills only. Scrub f1500-1560 (the pull-back from zoom 2.4 is the biggest camera move of the film; at f1530 the tilt is still easing from -13 to -7 deg) and f1650-1710.
+- The caption (bottom 88) sits close under the window's lower edge at f1530-1545 (about 25 px of stage between them). Lower `OUTRO_LAYOUT.captionBottom` or reduce `scaleBias` at f1536 if it feels tight.
+- Fixed 29-frame fade means the last frame is pure black plus grain. Grab the poster at f1706.
+
+### Warnings for the next patch (16, audio)
+- SFX anchors for S6: riser from f1500, impact on f1650 (same as the S0 hit), whooshes optional at f1500 and the f1600 pen touch-down, tail from f1710.
+- `S6Outro` mounts from f1500 to the last frame; the fade overlay is inside it, so audio can follow `OUTRO.fadeStart/fadeEnd`.

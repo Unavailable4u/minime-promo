@@ -24,6 +24,13 @@ export type ChatAppProps = {
   rimIntensity?: number;
   /** Extra styles for the window box (the film applies the S1 rise: opacity, transform, filter). */
   style?: React.CSSProperties;
+  /**
+   * Outro teaser (patch 15): 0..1 position of the light travelling across the INACTIVE tab names of the top nav
+   * (see TopNav `sweep`). `null` / `undefined` = off. It never activates a tab and never shows any other tab's content.
+   */
+  navSweep?: number | null;
+  /** Peak brightness of the nav sweep 0..1. Default 1. */
+  navSweepStrength?: number;
 };
 
 /** One message row. Every row component brings its own 16 px bottom padding, except the Hire Review card. */
@@ -90,9 +97,16 @@ const PanelView: React.FC<{panel: PanelState; frame: number}> = ({panel, frame})
 );
 
 /** Draws one complete AppState (pure: props in, pixels out). Exported for tools that already hold a state. */
-export const ChatAppView: React.FC<{state: AppState} & Omit<ChatAppProps, 'frame'>> = ({state, rimAngle, rimIntensity, style}) => (
+export const ChatAppView: React.FC<{state: AppState} & Omit<ChatAppProps, 'frame'>> = ({
+  state,
+  rimAngle,
+  rimIntensity,
+  style,
+  navSweep,
+  navSweepStrength,
+}) => (
   <AppWindow
-    header={<TopNav />}
+    header={<TopNav sweep={navSweep} sweepStrength={navSweepStrength} />}
     sidebar={<ChatSidebar {...state.sidebar} />}
     panel={state.panel ? <PanelView panel={state.panel} frame={state.frame} /> : null}
     panelWidth={state.panelWidth}
@@ -121,8 +135,24 @@ export const ChatAppView: React.FC<{state: AppState} & Omit<ChatAppProps, 'frame
  *
  * Size: the 1440x810 logical window. Position it yourself (UI_OFFSET on the stage, or inside the Camera world).
  */
-export const ChatApp: React.FC<ChatAppProps> = ({frame: frameOverride, rimAngle, rimIntensity, style}) => {
+export const ChatApp: React.FC<ChatAppProps> = ({
+  frame: frameOverride,
+  rimAngle,
+  rimIntensity,
+  style,
+  navSweep,
+  navSweepStrength,
+}) => {
   const current = useCurrentFrame();
   const frame = frameOverride ?? current;
-  return <ChatAppView state={appStateAt(frame)} rimAngle={rimAngle} rimIntensity={rimIntensity} style={style} />;
+  return (
+    <ChatAppView
+      state={appStateAt(frame)}
+      rimAngle={rimAngle}
+      rimIntensity={rimIntensity}
+      style={style}
+      navSweep={navSweep}
+      navSweepStrength={navSweepStrength}
+    />
+  );
 };

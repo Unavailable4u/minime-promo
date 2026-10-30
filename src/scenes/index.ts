@@ -18,7 +18,7 @@ import {S2_CAMERA, S2_CURSOR, S2Instant} from './S2Instant';
 import {S3_CAMERA, S3_CURSOR, S3Team} from './S3Team';
 import {S4_CAMERA, S4_CURSOR, S4Control} from './S4Control';
 import {S5_CAMERA, S5_CURSOR, S5Organized} from './S5Organized';
-import {S6_CAMERA, S6_CURSOR, S6_GRID, S6_WINDOW, S6Outro} from './S6Outro';
+import {S6_CAMERA, S6_CURSOR, S6_GRID, S6_NAV_SWEEP, S6_WINDOW, S6Outro} from './S6Outro';
 import type {GridOpacityFn, SceneOverlayProps, WindowStyleFn} from './sceneTypes';
 
 export * from './sceneTypes';
@@ -28,7 +28,7 @@ export {S2_CAMERA, S2_CURSOR, S2Instant} from './S2Instant';
 export {S3_CAMERA, S3_CURSOR, S3Team} from './S3Team';
 export {S4_CAMERA, S4_CURSOR, S4Control} from './S4Control';
 export {S5_CAMERA, S5_CURSOR, S5Organized} from './S5Organized';
-export {S6_CAMERA, S6_CURSOR, S6_GRID, S6_WINDOW, S6Outro} from './S6Outro';
+export {S6_CAMERA, S6_CURSOR, S6_GRID, S6_NAV_SWEEP, S6_WINDOW, S6Outro} from './S6Outro';
 
 // ------------------------------------------------------------------ camera + cursor
 /** Every camera keyframe of the film. Order does not matter, frames do (the camera sorts them). */
@@ -83,3 +83,6 @@ export const gridOpacityAt: GridOpacityFn = (frame) => Math.max(S0_GRID(frame), 
 /** The app window's own box style at a frame: the S6 override from the outro on, otherwise the S1 rise. */
 export const windowStyleAt: WindowStyleFn = (frame) =>
   S6_WINDOW !== null && frame >= SCENES.S6.start ? S6_WINDOW(frame) : S1_WINDOW(frame);
+
+/** Outro teaser: position (0..1) of the light travelling across the nav tab names, or null when it is off (f1515-1560). */
+export const navSweepAt = (frame: number): number | null => S6_NAV_SWEEP(frame);

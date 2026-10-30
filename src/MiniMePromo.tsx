@@ -10,7 +10,7 @@ import {GridFloor} from './fx/GridFloor';
 import {Vignette} from './fx/Vignette';
 import {ramp} from './lib/ease';
 import {FontsReady} from './lib/fonts';
-import {ALL_CAMERA, ALL_CURSOR, SCENE_OVERLAYS, gridOpacityAt, windowStyleAt} from './scenes';
+import {ALL_CAMERA, ALL_CURSOR, SCENE_OVERLAYS, gridOpacityAt, navSweepAt, windowStyleAt} from './scenes';
 import {ChatApp} from './ui/ChatApp';
 
 /**
@@ -67,7 +67,13 @@ const World: React.FC<{frame: number}> = ({frame}) => {
     <>
       {showApp ? (
         <div style={{position: 'absolute', left: UI_OFFSET.x, top: UI_OFFSET.y, width: UI.width, height: UI.height}}>
-          <ChatApp frame={frame} rimAngle={rimAngle} rimIntensity={0.55} style={windowStyleAt(frame)} />
+          <ChatApp
+            frame={frame}
+            rimAngle={rimAngle}
+            rimIntensity={0.55}
+            style={windowStyleAt(frame)}
+            navSweep={navSweepAt(frame)}
+          />
         </div>
       ) : null}
       <Cursor waypoints={ALL_CURSOR} frame={frame} />

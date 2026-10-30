@@ -122,6 +122,14 @@ export const FOCUS_RECTS = {
    * is deliberately out of frame. Zoom 2.34.
    */
   organizeComposer: {x: 256, y: 600, w: 760, h: 210},
+  // ---- PATCH 15 (S6 Outro: hero 3/4 view) ----
+  /**
+   * The whole window with extra stage on every side, shifted so the window sits in the upper part of the frame and the
+   * caption has empty stage under it. The rect is wider and taller than the window on purpose: with padding 72 it gives
+   * zoom 1.0 at scaleBias 1, the window centre sits about 70 px above the stage centre, and the depth-of-field mask
+   * (it blurs outside the focus rect) only touches the far edges of the stage, not the grid floor next to the window.
+   */
+  outroHero: {x: -168, y: 7, w: 1776, h: 936},
 } as const satisfies Record<string, FocusRect>;
 
 export type FocusName = keyof typeof FOCUS_RECTS;
