@@ -998,3 +998,82 @@ f1500 cut + pull-back + cursor leaves | f1510-1545 light sweep across the window
 ### Warnings for the next patch (16, audio)
 - SFX anchors for S6: riser from f1500, impact on f1650 (same as the S0 hit), whooshes optional at f1500 and the f1600 pen touch-down, tail from f1710.
 - `S6Outro` mounts from f1500 to the last frame; the fade overlay is inside it, so audio can follow `OUTRO.fadeStart/fadeEnd`.
+
+
+## PATCH 15B — Multi-device outro: laptop + tablet + phone (f1500-1859)
+
+Replaces the second half of S6 (defocused window + centred end card). The Chat window becomes the screen of a laptop, a tablet and a phone join it, and the lockup / tagline / CTA settle on the LEFT beside the cluster. The cluster stays sharp through the final hold.
+
+### Files
+Created: `src/config/devices.ts`, `src/config/mobileScript.ts`, `src/fx/{TouchDot,ScreenWake,FloorGlow,SyncLines}.tsx`, `src/ui/devices/{EdgeTrace,GlassSheen,LaptopFrame,TabletFrame,PhoneFrame,DeviceStage}.tsx`, `src/ui/mobile/{MobileApp,MobileHeader,MobileSidebarDrawer,MobilePanelDrawer,MobileGraphSheet,MobileBoot}.tsx`, `src/ui/TabletApp.tsx`.
+Changed: `src/config/outro.ts` (rewritten: defocus / hero-centre fields REMOVED, end card on the left, `devicesCaption*`, `cursorOff`), `src/config/timeline.ts` (`TOTAL_FRAMES` 1860, `SCENES.S6` = 1500-1859, 31 bars = 62 s), `src/config/copy.ts` (`CAPTIONS.devices`), `src/config/focus.ts` (+ `deviceCluster`, `deviceLaptop`, `deviceTablet`, `devicePhone`, `outroStage`, derived from devices.ts), `src/scenes/S6Outro.tsx`, `src/ui/ChatApp.tsx` (only `export` added to `MessageRow` and `PanelView`), `src/MiniMePromo.tsx` (World renders `<DeviceStage/>` from `SCENES.S6.start`; the Cursor unmounts at `OUTRO.cursorOff`), `src/Root.tsx` (comment only). `src/scenes/index.ts` is unchanged (`S6_WINDOW` stays as an identity hook).
+Hard-coded 1740/1739: none left outside docs (grep'd).
+
+### PUBLIC API
+- `deviceStateAt(frame): DeviceStageState` — `{cluster: Pose, laptop: LaptopState, tablet, phone: DeviceCommon, floorGlow, hit, connect, clock, tour}`. `Pose = {x,y,z,rx,ry,rz,s}` in stage px relative to (960,540), CSS order translate3d, rotateX, rotateY, rotateZ, scale. A NEGATIVE cluster `rx` looks down on the scene.
+- `mobileStateAt(frame): MobileState` — boot, chat wipe, drawers, sheet, touch dot (`MOBILE_LAYOUT`, `MOBILE_TIMES` exported).
+- `projectDevicePoint(pose, local, cluster?)`, `deviceBox`, `screenBox`, `clusterBox`, `fitCluster(base, target)`, `DEVICE_SHOTS`, `CLUSTER_BUILD`, `CLUSTER_FINAL`, `REST_POSES`, `PHONE_TOUR_POSE`, `DEVICE_TIMES`.
+- `<DeviceStage frame rimAngle navSweep/>`; frames `<LaptopFrame state glassAngle sheen>`, `<TabletFrame>`, `<PhoneFrame>` (children = screen content); `<TabletApp contentFrame/>` (chat 700 + panel 480); `<MobileApp state contentFrame/>`.
+- fx: `<TouchDot x y on down ripple/>`, `<ScreenWake width height radius wake markGlow sweep blip/>`, `<FloorGlow/>`, `<FloorPlane/>`, `<SyncLines lines progress clock/>`, `<EdgeTrace/>`, `<GlassSheen/>`.
+
+### Timeline (30 fps authored, beat = 15 f)
+1500-1560 as Patch 15 (cut, pull-back, floating window, nav sweep, caption "Chat is just the beginning.", cursor leaves) | 1560 laptop build: edge trace (18 f), bezel grows, base slides out, lid springs, floor glow, camera pulls to the cluster | 1590-1602 wake wipe hides the content swap (S5 end state -> replay of the Tier 3 run f690-1040 at 1.7x) | 1620 tablet arcs in (power-on mark, wakes 1638) | 1650 phone arcs in, boot 0-100 % (1654-1680), chat wipes in 1680-1692, bloom + 2 % hit | 1660-1694 caption "On every screen." | 1680-1710 connectors draw on | 1672-1696 camera moves to the phone (screen about 960 px tall) | taps: 1695 hamburger (sidebar), 1725 chevron (close), 1740 panel icon (Working Panel drawer), 1755 "Tap to view routing graph" (sheet), 1770 swipe down (sheet + drawer close) | 1764-1774 glide, then identity camera | 1770 cluster slides right (panel spring), end card on the left: pen draw 1770-1800, impact 1800, wordmark 1790-1808, tagline 1786, CTA 1796-1810, url 1804, all done by about 1816 | 1816-1839 clean hold (idle float, sheens, glow breathing) | 1840-1859 fade to black (last overlay element).
+
+### Decisions
+- The phone tour hits (first tap 1695) are on beats; the tour camera/pose start at 1672 (was 1664 in the first draft) so the caption clears the phone before it fills the frame.
+- Laptop = the existing `<ChatApp/>` inside `LaptopFrame`; only a boxShadow override is passed (its 120 px shadow would otherwise paint over the bezel).
+- Real 3D: `DeviceStage` has its own perspective (2200) and preserve-3d cluster. No filter / backdrop-filter / mask / overflow:hidden / opacity<1 on any ancestor of a 3D child; they live only inside flat leaf planes (lid, tablet / phone body). The connectors are a flat layer BEHIND the cluster.
+- Tablet / phone stand on the floor; the idle float only lifts them (never sinks).
+- No product claims: the connectors are decorative, the copy says only "On every screen."
+- Fictional data only (Maya Chen, D1 sidebar, D3 answer); phone status bar shows a fictional 9:41; no browser chrome, no logos.
+- Remotion in this sandbox needs `--browser-executable` pointing to a local Chromium (`--gl=swangle`).
+
+### Known issues
+- Motion has not been scrubbed in the Studio; check the camera moves at f1556-1600 and f1672-1700 (camera spring still settling when the first tap lands) and the wake wipe at f1590-1602.
+- The markdown table in the phone chat is clipped by the bubble at the bottom (it scrolls out of view); the sidebar drawer shows a subset of the D1 rows.
+- Three live app renders per frame (laptop, tablet, phone panel/sheet): see render time below.
+
+### SFX anchors for patch 16
+laptop build 1560 (edge trace) + base slide 1566-1596 | wake swipe 1590-1602 | tablet whoosh 1620 (+ power-on 1638) | phone whoosh 1650 + impact 1650 | boot ticks 1654-1680 (one per 5 %) | connector pings 1680-1710 | taps 1695, 1725, 1740, 1755, swipe 1770-1780 | drawer swishes 1697, 1727, 1742, 1772 | cluster slide whoosh 1770 | final impact 1800 | tail 1840-1859.
+Total film is now 1860 frames (62 s): re-time any audio built for 1740.
+
+### Verified
+- `npx tsc --noEmit` passes. Stills at f1560, 1580, 1610, 1640, 1660, 1684, 1700, 1725, 1745, 1780, 1810, 1830, 1855 looked at. f1700 rendered twice at 1920x1080: identical MD5 5c757249aedae70e25309158990c2e55.
+- Best poster frame: f1830.
+
+## PATCH 15C — device scene fixes (laptop, phone placement, tablet framing)
+
+Review of Patch 15B against the reference images (silver laptop + tablet behind + phone in front). Incremental on top of 15B.
+
+### Files changed
+- `src/config/devices.ts`, `src/ui/devices/LaptopFrame.tsx`, `src/ui/devices/DeviceStage.tsx`, `src/ui/mobile/MobileBoot.tsx`, `src/scenes/S6Outro.tsx`.
+
+### What was wrong and what changed
+- **Keyboard**: the keys were one CSS background grid of identical 45x42 cells. Now a real ANSI layout in SVG (function row, staggered rows, tab / caps / enter / shift, long space bar, arrow cluster) plus a trackpad. The deck is brushed silver with black keys (references 2-4); it was all dark.
+- **Laptop proportions**: `DEVICE_PERSPECTIVE` 2200 -> 3400 (a short lens magnified the deck's front edge so the base looked like a tray wider than the lid); `LAPTOP.baseW` 1560 -> 1420 (as wide as the lid), `baseDepth` 430 -> 620 (room for keys + trackpad), `lidTilt` 9 -> 8; cluster elevation `rx` -11 -> -6 (build and final). The laptop no longer reaches the bottom edge at f1606.
+- **Phone placement**: it stood at `x 700, z 200`, i.e. ON the keyboard deck and over the laptop's Working Panel. Now `x 840, z 470, s .70`: beside the deck's right end, in front of the tablet's lower-left, overlapping only a sliver of the laptop (reference 3). Tour pose and entrance start moved accordingly.
+- **Tablet**: `x 690 -> 1010`, `ry -18`: about 75 % visible instead of a sliver behind the laptop and phone. The final fit box is now x 800-1850 (it was 800-1900, 20 px from the frame edge); the float + hit keep every device inside x 795-1851 over f1790-1859 (checked numerically).
+- **Phone boot screen** was translucent (chat text showed through at f1660): the base is now solid #050304 with the glow on top.
+- **Phone tour** cropped the bottom of the phone at f1720: the `devicePhone` camera padding 50 -> 80 (whole body in frame, screen still about 900 px tall).
+- **Connectors**: arcs lowered (bend 40 / 60 / -40) and faded out f1748-1770, so no loose arc is left over the tablet in the final shot.
+
+### Verified
+`npx tsc --noEmit` passes. Stills looked at: f1606, 1640, 1660, 1684, 1700, 1720, 1745, 1770, 1790, 1810, 1830, 1850. f1830 rendered twice is byte-identical.
+
+### Known / not changed
+- In the final composition the three devices share about 1050 px of width, so the laptop screen is about 620 px wide: the UI text is a composition detail there, not readable (the tour moments carry the legibility).
+- Not scrubbed in the Studio; scrub f1560-1620 (laptop build) and f1750-1790 (cluster slide).
+
+## PATCH 15D — laptop colour match + hinge, metal phone / tablet frames
+
+### Files changed
+- `src/ui/devices/LaptopFrame.tsx`, `src/ui/devices/PhoneFrame.tsx`, `src/ui/devices/TabletFrame.tsx`.
+
+### Changes
+- **Laptop colour**: the deck was silver and the lid black, which looked like two different machines (references: Samsung graphite, Asus black: deck and lid are one colour family). The deck is now graphite (`#1c1c20 -> #54555d`), the front lip a graphite chamfer with a light top edge, the trackpad a faint outlined recess, the keys stay black so they read on the lighter deck. The lid shell gradient was lifted a little to sit in the same family.
+- **Hinge**: the lid ended in a hard black bar with rounded lower corners (dark wedges beside the deck) and the deck simply ran under it. The lid's lower corners are now nearly square (rounded on top only), and a hinge barrel (metal-shaded strip with a cap at each end, 5 px in front of the lid's bottom edge) bridges the join.
+- **Phone**: a brushed-titanium frame band (5 px, `METAL_BAND`, with a specular streak) around the black glass bezel, and metal side buttons (action, volume x2 on the left, power on the right) that protrude 4 px with a bright edge (reference 5).
+- **Tablet**: same metal band (not requested; it keeps phone and tablet one finish). To revert, restore the old `TabletFrame` body div.
+
+### Verified
+`npx tsc --noEmit` passes. Stills looked at: f1606, f1700, f1830 (full frames) plus close crops of the hinge and the phone.

@@ -21,7 +21,7 @@ const MiniMePromoPreview: React.FC = () => (
 export const RemotionRoot: React.FC = () => {
   return (
     <>
-      {/* The main deliverable: 1920x1080 @ 30 fps, 1740 frames (58 s). */}
+      {/* The main deliverable: 1920x1080 @ 30 fps, 1860 frames (62 s). */}
       <Composition
         id="MiniMePromo"
         component={MiniMePromo}

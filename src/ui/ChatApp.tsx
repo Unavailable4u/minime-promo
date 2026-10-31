@@ -34,7 +34,7 @@ export type ChatAppProps = {
 };
 
 /** One message row. Every row component brings its own 16 px bottom padding, except the Hire Review card. */
-const MessageRow: React.FC<{row: RowState; frame: number}> = ({row, frame}) => {
+export const MessageRow: React.FC<{row: RowState; frame: number}> = ({row, frame}) => {
   switch (row.kind) {
     case 'user':
       return <UserMessage text={row.text} progress={row.progress} />;
@@ -64,7 +64,7 @@ const MessageRow: React.FC<{row: RowState; frame: number}> = ({row, frame}) => {
 };
 
 /** The Working Panel with its graph and step cards. It is always 480 px wide; AppWindow clips it while it opens. */
-const PanelView: React.FC<{panel: PanelState; frame: number}> = ({panel, frame}) => (
+export const PanelView: React.FC<{panel: PanelState; frame: number}> = ({panel, frame}) => (
   <div style={{width: '100%', height: '100%', opacity: panel.opacity}}>
     <WorkingPanel
       cascade={panel.cascade}

@@ -30,6 +30,8 @@ export const CAPTIONS = {
   control: {text: 'You stay in control.', highlight: 'control.'},
   organized: {text: 'Every chat, organized.', highlight: 'organized.'},
   outro: {text: 'Chat is just the beginning.', highlight: 'beginning.'},
+  /** Patch 15B: the device scene. It only says MiniMe works on every screen (no sync or hand-off claims). */
+  devices: {text: 'On every screen.', highlight: 'screen.'},
 } as const;
 
 /** Callout chips: 4 words max each. */

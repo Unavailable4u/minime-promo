@@ -24,12 +24,23 @@
  * exported by `panelLayout()` and `stepCardRect(i)`; Hire Review buttons by `hireReviewLayout()` (card-local).
  */
 
+import {DEVICE_SHOTS} from './devices';
+import {UI_OFFSET} from './timeline';
+
 export type FocusRect = {
   readonly x: number;
   readonly y: number;
   readonly w: number;
   readonly h: number;
 };
+
+/** Stage box -> focus rectangle in UI px (the camera adds UI_OFFSET back). */
+const uiBox = (b: {x: number; y: number; w: number; h: number}): FocusRect => ({
+  x: Math.round(b.x - UI_OFFSET.x),
+  y: Math.round(b.y - UI_OFFSET.y),
+  w: Math.round(b.w),
+  h: Math.round(b.h),
+});
 
 export const FOCUS_RECTS = {
   /** Top navigation bar, full width. */
@@ -130,6 +141,17 @@ export const FOCUS_RECTS = {
    * (it blurs outside the focus rect) only touches the far edges of the stage, not the grid floor next to the window.
    */
   outroHero: {x: -168, y: 7, w: 1776, h: 936},
+  // ---- PATCH 15B (S6 device cluster): derived from src/config/devices.ts (stage px -> UI px, rounded) ----
+  /** The three devices at their rest poses inside the build-up cluster pose (laptop about 60 % of the frame). */
+  deviceCluster: uiBox(DEVICE_SHOTS.cluster),
+  /** The laptop with its base. */
+  deviceLaptop: uiBox(DEVICE_SHOTS.laptop),
+  /** The tablet body. */
+  deviceTablet: uiBox(DEVICE_SHOTS.tablet),
+  /** The phone SCREEN in its tour pose: zoomed so the screen is about 960 px tall on the 1080p frame. */
+  devicePhone: uiBox(DEVICE_SHOTS.phone),
+  /** The whole stage (identity camera): the final composition and the hold. */
+  outroStage: {x: -UI_OFFSET.x, y: -UI_OFFSET.y, w: 1920, h: 1080},
 } as const satisfies Record<string, FocusRect>;
 
 export type FocusName = keyof typeof FOCUS_RECTS;

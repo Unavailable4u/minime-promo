@@ -12,6 +12,8 @@ import {ramp} from './lib/ease';
 import {FontsReady} from './lib/fonts';
 import {ALL_CAMERA, ALL_CURSOR, SCENE_OVERLAYS, gridOpacityAt, navSweepAt, windowStyleAt} from './scenes';
 import {ChatApp} from './ui/ChatApp';
+import {DeviceStage} from './ui/devices/DeviceStage';
+import {OUTRO} from './config/outro';
 
 /**
  * MiniMe promo — the master timeline (patch 08).
@@ -65,7 +67,9 @@ const World: React.FC<{frame: number}> = ({frame}) => {
 
   return (
     <>
-      {showApp ? (
+      {frame >= SCENES.S6.start ? (
+        <DeviceStage frame={frame} rimAngle={rimAngle} navSweep={navSweepAt(frame)} />
+      ) : showApp ? (
         <div style={{position: 'absolute', left: UI_OFFSET.x, top: UI_OFFSET.y, width: UI.width, height: UI.height}}>
           <ChatApp
             frame={frame}
@@ -76,7 +80,7 @@ const World: React.FC<{frame: number}> = ({frame}) => {
           />
         </div>
       ) : null}
-      <Cursor waypoints={ALL_CURSOR} frame={frame} />
+      {frame < OUTRO.cursorOff ? <Cursor waypoints={ALL_CURSOR} frame={frame} /> : null}
     </>
   );
 };

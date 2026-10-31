@@ -29,8 +29,8 @@ export const beat = (beats: number): number => Math.round(beats * BEAT);
 /** Bars -> frames. bar(2) === 120 at 30 fps. */
 export const bar = (bars: number): number => Math.round(bars * BAR);
 
-/** 29 bars = 1740 frames = 58 s at 30 fps. */
-export const TOTAL_FRAMES = f(1740);
+/** 31 bars = 1860 frames = 62 s at 30 fps (patch 15B: S6 grew from 240 to 360 frames for the device scene). */
+export const TOTAL_FRAMES = f(1860);
 
 // ------------------------------------------------------------------ geometry
 /** The video frame. */
@@ -49,7 +49,7 @@ export const UI_OFFSET = {
 /**
  * Scene ranges. `start` and `end` are both INCLUSIVE frame numbers; `duration` = end - start + 1.
  *   S0 Logo 0-119 | S1 Reveal 120-239 | S2 Instant 240-479 | S3 Team 480-1079
- *   S4 Control 1080-1319 | S5 Organized 1320-1499 | S6 Outro 1500-1739
+ *   S4 Control 1080-1319 | S5 Organized 1320-1499 | S6 Outro 1500-1859
  */
 const makeScene = (firstAuthored: number, lastAuthored: number) => {
   const start = f(firstAuthored);
@@ -64,7 +64,7 @@ export const SCENES = {
   S3: makeScene(480, 1079),
   S4: makeScene(1080, 1319),
   S5: makeScene(1320, 1499),
-  S6: makeScene(1500, 1739),
+  S6: makeScene(1500, 1859),
 } as const;
 
 export type SceneId = keyof typeof SCENES;
