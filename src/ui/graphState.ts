@@ -2,7 +2,7 @@
  * MiniMe promo — routing graph state helpers (patch 06).
  *
  * Turn a simple SCHEDULE (frame numbers authored with f()/sec()/beat()) into the props of <RoutingGraph/>:
- * a node's spring entry, its status changes with the ring draw-on, an edge's draw-on and particle window.
+ * a node's spring entry, its status changes with the ring draw-on, an edge's draw-on and halo window.
  * Patch 07's script builds its graph states with these, so the graph grows from data.
  */
 import {FPS, f} from '../config/timeline';
@@ -18,7 +18,7 @@ export const GRAPH_RING_DRAW_FRAMES = f(12);
 export const GRAPH_RING_START_FRAMES = f(8);
 /** Frames an edge needs to draw from source to target. */
 export const GRAPH_EDGE_DRAW_FRAMES = f(14);
-/** Frames the particles of an edge fade in / out. */
+/** Frames the halo of an edge fades in / out. */
 export const GRAPH_FLOW_FADE_FRAMES = f(8);
 
 export type StatusPhase = {frame: number; status: GraphNodeStatus};
@@ -34,9 +34,9 @@ export type EdgeSchedule = {
   /** Frame the line starts to draw. */
   start: number;
   drawFrames?: number;
-  /** Frame the particles start (default: when the line has arrived). */
+  /** Frame the halo starts (default: when the line has arrived). */
   flowFrom?: number;
-  /** Frame the particles fade out (default: they never stop). */
+  /** Frame the halo fades out (default: it never stops). */
   flowTo?: number;
 };
 

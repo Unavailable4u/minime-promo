@@ -39,9 +39,6 @@ export const GRAPH = {
   endpointLabelColor: '#e5e5e5',
   /** Seeded wobble of node positions in graph units. The brief allows 3 px; the slot scale is 1.036, so 2.4 stays below. */
   wobbleAmplitude: 2.4,
-  /** Particle speed along an edge in graph units per frame (linear motion). */
-  particleSpeed: 1.9,
-  particlesPerEdge: 2,
   arrowLength: 7,
   arrowHalfWidth: 3.2,
   /** Node fill alpha per state (real canvas rules: pending .22, running .60, otherwise .92). */

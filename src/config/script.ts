@@ -200,7 +200,7 @@ const S3_GRAPH_EDGES: Partial<Record<string, EdgeSchedule>> = {
   'code_writer>test_writer': {start: f(796)},
   'test_writer>verifier': {start: f(832)},
   'market_researcher>documentation_writer': {start: f(856)},
-  // the amber recheck edge draws back to code_writer, its particles stop when the verifier passes
+  // the amber recheck edge draws back to code_writer, its halo fades when the verifier passes
   'verifier>code_writer': {start: f(856), drawFrames: f(20), flowTo: f(900)},
   'verifier>output': {start: f(908)},
   'documentation_writer>output': {start: f(908)},

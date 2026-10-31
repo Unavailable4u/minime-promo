@@ -1077,3 +1077,35 @@ Review of Patch 15B against the reference images (silver laptop + tablet behind 
 
 ### Verified
 `npx tsc --noEmit` passes. Stills looked at: f1606, f1700, f1830 (full frames) plus close crops of the hinge and the phone.
+
+## PATCH 15E — hinge width match, full-width keyboard with numpad, iOS status icons
+
+### Files changed
+- `src/config/devices.ts`, `src/ui/devices/LaptopFrame.tsx`, `src/ui/devices/PhoneFrame.tsx`.
+
+### What was wrong and what changed
+- **Hinge**: the deck was 1420 px wide and the finished lid 1472 px (1440 + 2 x 16 bezel), so the two parts never lined up at the hinge, and the loose barrel + end caps stuck out past the deck. Now `LAPTOP.baseW = 1472`, and `LaptopFrame` derives the live deck width from the growing bezel (`deckW = screenW + 2 * bezel`), so lid and deck are flush at every frame of the build. The hinge is one strip across the full width (dark seam under the lid + metal barrel), the lid's lower corners and the deck's back corners share one radius (3 px), and the front lip and the deck's front corners share one radius.
+- **Keyboard**: it was a 15-unit block (1050 px = 71 % of the deck) with empty deck on both sides. Now a full-size layout with numpad (main block 15 units + 0.5 gap + numpad 4 units, key pitch 72 px, 1404 px = 95 % of the deck), like the Samsung and Asus references: tall `+` and `enter` on the numpad, a double-width `0`, an arrow cluster with drawn triangles, a drawn window-key mark, dual legends on the number row and punctuation (shifted symbol above), dimmed legends on the function row, a 1 px lit top edge on every cap, and a recessed key well with a hairline edge. The trackpad (660 x 126) is centred under the MAIN block, not under the numpad, as on both references. `baseDepth` 620 -> 650 for the extra palm-rest room.
+- **Phone status bar**: the lucide `BatteryFull` / `Signal` / `Wifi` icons (a boxy outline with three bars) are replaced by three small inline SVGs in the iOS style: four rising rounded bars, a Wi-Fi fan (two arcs + wedge), and a battery with a translucent outline, a solid level fill and the terminal nub (as on the reference phone: no bolt). Time and icons are centred on the Dynamic Island's centre line.
+
+### Verified
+`npx tsc --noEmit` passes. Stills looked at: f1576, f1590, f1606, f1720, f1790, f1830 (full frames) plus 4x crops of both hinge corners and of the phone status bar. Rendered locally with a bundled Chromium (`--gl=swangle`).
+
+### Known / not changed
+- Key legends are real text, so in the f1606 shot they are squashed by the foreshortening (the cluster elevation is still `rx -6`); they read as fine key texture there and are legible only if the elevation is raised.
+- Not scrubbed in the Studio; scrub f1560-1620 (the build) and f1740-1790 (the cluster slide).
+
+## PATCH 15F — remove the travelling particles from the routing graph
+
+Apply AFTER 15E (it touches `docs/PATCH_NOTES.md`, which 15E also edits).
+
+### Files changed
+- `src/ui/RoutingGraph.tsx`, `src/config/graphLayout.ts`, `src/ui/graphState.ts`, `src/config/script.ts` (comments only).
+
+### Changes
+- The small dots that travelled along every edge between the nodes are gone (the whole `particles` block in `EdgeLine`, plus the now-unused `fract`, `quadPoint` and `lerpColor` imports and the `speed` / `phase` fields of `GraphEdgeState`, and `GRAPH.particleSpeed` / `GRAPH.particlesPerEdge`).
+- Kept on purpose: the soft amber halo behind the recheck edge (verifier -> code_writer). It is still driven by `flow` / `flowTo`, so it still fades out when the verifier passes (f900).
+- The device connector lines of the outro (`src/fx/SyncLines.tsx`) have their own small particles; they were NOT touched (they are not in the graph).
+
+### Verified
+`npx tsc --noEmit` passes. `DevGraph` at frame 205 (both the large view and the 1:1 Working Panel slot) rendered: no dots on any edge, arrowheads and the amber halo unchanged.

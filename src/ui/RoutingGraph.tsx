@@ -13,7 +13,6 @@ import {
   nodeParent,
   quadLength,
   quadPath,
-  quadPoint,
   quadTangent,
   type GraphEdgeDef,
   type GraphNodeDef,
@@ -22,7 +21,7 @@ import {
 } from '../config/graphLayout';
 import {EDGE_COLORS, FONTS, NEUTRAL, STATUS} from '../config/theme';
 import {clamp01, mapRange} from '../lib/ease';
-import {lerpColor, withAlpha} from '../lib/color';
+import {withAlpha} from '../lib/color';
 import {createRng, hashString} from '../lib/prng';
 import {Emoji} from './Emoji';
 import {panelLayout} from './panelLayout';
@@ -33,7 +32,7 @@ import {panelLayout} from './panelLayout';
  * An SVG re-creation of the real app's canvas graph (brief §6.4 item 6). It is a dumb component: the caller
  * passes, per node and per edge, how far it has appeared, its status and its ring progress (see
  * src/ui/graphState.ts for helpers that compute those from a schedule). The only thing read from `frame`
- * is decoration: the running pulse, the seeded wobble (at most 3 px) and the particle travel.
+ * is decoration: the running pulse and the seeded wobble (at most 3 px).
  *
  * Layout: a card (rounded 8, border #262626, bg #0a0a0a) that fills its parent (the 456 x 288 slot of the
  * Working Panel), the graph on top and a two-row legend strip at the bottom.
@@ -56,16 +55,12 @@ export type GraphNodeState = {
 export type GraphEdgeState = {
   /** 0..1 draw-on progress of the line. 0 = not drawn. */
   appear: number;
-  /** 0..1 visibility of the moving particles (0 = none). Default 1. */
+  /** 0..1 strength of the amber halo of a recheck edge (0 = none). Default 1. */
   flow?: number;
-  /** Constant speed multiplier of the particles. Default 1. */
-  speed?: number;
-  /** Extra position offset in cycles (add your own integral for a time-varying speed). Default 0. */
-  phase?: number;
 };
 
 export type RoutingGraphProps = {
-  /** Frame used for the pulse, the wobble and the particle travel. Default: the current frame. */
+  /** Frame used for the pulse and the wobble. Default: the current frame. */
   frame?: number;
   nodes: Partial<Record<GraphNodeId, GraphNodeState>>;
   /** Keyed by edge id (`from>to`, for example `verifier>code_writer`). */
@@ -129,7 +124,6 @@ const pulseOf = (id: string, frame: number): number => {
   return 0.5 + 0.5 * Math.sin(TAU * (frame / 42 + phase));
 };
 
-const fract = (v: number): number => v - Math.floor(v);
 
 const safeId = (text: string): string => text.replace(/[^a-zA-Z0-9]/g, '_');
 
@@ -348,7 +342,6 @@ const EdgeLine: React.FC<{
   const rTo = GRAPH_NODES[def.to].radius + GRAPH.ringWidth + 1.5;
   const curve = edgeCurve(from, to, rFrom, rTo, def.bend);
   const d = quadPath(curve);
-  const length = quadLength(curve);
   const maskId = `${uid}-m-${safeId(def.id)}`;
   const lineOpacity = def.reason === 'plan' ? 0.85 : def.reason === 'decision' ? 0.9 : 1;
 
@@ -358,29 +351,8 @@ const EdgeLine: React.FC<{
   const angle = (Math.atan2(tangent.y, tangent.x) * 180) / Math.PI;
   const arrowOpacity = mapRange(appear, 0.8, 1, 0, 1) * lineOpacity;
 
-  // particles (linear motion along the curve)
+  // the recheck edge keeps its soft amber halo (strength = flow); there are no moving particles on any edge
   const flow = clamp01(state.flow ?? 1);
-  const speed = state.speed ?? 1;
-  const phase = state.phase ?? 0;
-  const seedOffset = (hashString(def.id) % 1000) / 1000;
-  const particles: React.ReactNode[] = [];
-  if (flow > 0.001 && appear >= 0.999) {
-    const base = fract(phase + seedOffset + (frame * GRAPH.particleSpeed * speed) / Math.max(24, length));
-    for (let k = 0; k < GRAPH.particlesPerEdge; k++) {
-      const t = fract(base + k / GRAPH.particlesPerEdge);
-      const p = quadPoint(curve, t);
-      const tail = quadPoint(curve, Math.max(0, t - 0.045));
-      const fade = Math.pow(Math.sin(Math.PI * t), 0.6) * flow;
-      const light = lerpColor(color, '#ffffff', def.reason === 'recheck' ? 0.35 : 0.55);
-      const size = def.reason === 'recheck' ? 2.5 : 2;
-      particles.push(
-        <g key={k}>
-          <circle cx={tail.x} cy={tail.y} r={size * 0.65} fill={light} opacity={fade * 0.4} />
-          <circle cx={p.x} cy={p.y} r={size} fill={light} opacity={fade} />
-        </g>,
-      );
-    }
-  }
 
   return (
     <g>
@@ -405,7 +377,6 @@ const EdgeLine: React.FC<{
         opacity={arrowOpacity}
         transform={`translate(${tip.x} ${tip.y}) rotate(${angle}) scale(${0.7 + 0.3 * mapRange(appear, 0.8, 1, 0, 1)})`}
       />
-      {particles}
     </g>
   );
 };
@@ -526,7 +497,7 @@ export const RoutingGraph: React.FC<RoutingGraphProps> = ({frame: frameOverride,
             {glowStop(gradients.paused, STATUS.paused)}
             {glowStop(gradients.done, STATUS.done)}
           </defs>
-          {/* edges and particles first, nodes on top of them, labels on top of everything */}
+          {/* edges first, nodes on top of them, labels on top of everything */}
           {GRAPH_EDGES.map((def) => {
             const state = edges[def.id];
             return state ? (

@@ -35,11 +35,13 @@ export const LAPTOP = {
   screenRadius: 14,
   lidRadius: 24,
   /**
-   * Base (keyboard deck) width, depth toward the viewer and thickness. The deck is as wide as the lid (a real laptop),
-   * and deep enough for a full keyboard + trackpad; the low camera elevation foreshortens it to a slim strip.
+   * Base (keyboard deck) width, depth toward the viewer and thickness. The deck is EXACTLY as wide as the finished lid
+   * (screenW + 2 * bezel = 1472): on a real laptop the lid and the deck are flush at the hinge. LaptopFrame also derives
+   * the live deck width from the growing bezel, so the two never differ while the bezel is still growing.
+   * Deep enough for a full-size keyboard with numpad + trackpad; the low camera elevation foreshortens it to a slim strip.
    */
-  baseW: 1420,
-  baseDepth: 620,
+  baseW: 1472,
+  baseDepth: 650,
   baseThickness: 14,
   /** Lid tilt back in degrees, settled. */
   lidTilt: 8,

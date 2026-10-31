@@ -1,5 +1,4 @@
 import React from 'react';
-import {BatteryFull, Signal, Wifi} from 'lucide-react';
 import {PHONE, type DeviceCommon} from '../../config/devices';
 import {FONTS} from '../../config/theme';
 import {EdgeTrace} from './EdgeTrace';
@@ -23,6 +22,35 @@ const METAL_BUTTON_L = 'linear-gradient(90deg, #4d4c54 0%, #c9c8d0 55%, #7a7981 
 const METAL_BUTTON_R = 'linear-gradient(90deg, #7a7981 0%, #c9c8d0 45%, #4d4c54 100%)';
 const W = PHONE.screenW + 2 * B;
 const H = PHONE.screenH + 2 * B;
+
+const ICON = '#f5f5f5';
+
+/** iOS-style cellular bars: four rounded bars, rising, bottom-aligned. */
+const SignalIcon: React.FC = () => (
+  <svg width={18} height={12} viewBox="0 0 18 12" style={{display: 'block'}}>
+    {[4, 6.5, 9, 11.5].map((h, i) => (
+      <rect key={i} x={i * 4.7} y={12 - h} width={3.2} height={h} rx={1} fill={ICON} />
+    ))}
+  </svg>
+);
+
+/** iOS-style Wi-Fi: two arcs and a wedge, all pointing up from one apex. */
+const WifiIcon: React.FC = () => (
+  <svg width={17} height={12} viewBox="0 0 17 12" style={{display: 'block'}}>
+    <path d="M2.1 3.7 A9.6 9.6 0 0 1 14.9 3.7" fill="none" stroke={ICON} strokeWidth={2.1} strokeLinecap="round" />
+    <path d="M4.4 6.3 A6.2 6.2 0 0 1 12.6 6.3" fill="none" stroke={ICON} strokeWidth={2.1} strokeLinecap="round" />
+    <path d="M8.5 11.6 L6.6 9.4 A2.9 2.9 0 0 1 10.4 9.4 Z" fill={ICON} stroke={ICON} strokeWidth={0.6} strokeLinejoin="round" />
+  </svg>
+);
+
+/** iOS-style battery: a translucent outline, a solid level fill, and the terminal nub on the right (the reference phone shows this, no bolt). */
+const BatteryIcon: React.FC = () => (
+  <svg width={27} height={13} viewBox="0 0 27 13" style={{display: 'block'}}>
+    <rect x={0.5} y={0.5} width={23} height={12} rx={3.7} fill="none" stroke={ICON} strokeOpacity={0.4} />
+    <rect x={2} y={2} width={20} height={9} rx={2.3} fill={ICON} />
+    <path d="M25.1 4.5 V8.5 C26.1 8.15 26.8 7.4 26.8 6.5 C26.8 5.6 26.1 4.85 25.1 4.5 Z" fill={ICON} fillOpacity={0.5} />
+  </svg>
+);
 
 /** Generic phone: r 60 body, pill cutout, side buttons, rim highlight, a minimal status bar (fictional 9:41) and a home bar. No brand. */
 export const PhoneFrame: React.FC<PhoneFrameProps> = ({state, glassAngle, sheen, children}) => (
@@ -58,13 +86,13 @@ export const PhoneFrame: React.FC<PhoneFrameProps> = ({state, glassAngle, sheen,
     <div style={{position: 'absolute', left: B, top: B, width: PHONE.screenW, height: PHONE.screenH, borderRadius: PHONE.screenRadius, overflow: 'hidden', background: '#000'}}>
       {state.wake > 0.001 ? children : null}
       {/* status bar + pill + home bar */}
-      <div style={{position: 'absolute', left: 0, top: 0, width: PHONE.screenW, height: 50, pointerEvents: 'none'}}>
-        <span style={{position: 'absolute', left: 34, top: 16, fontFamily: FONTS.body, fontWeight: 600, fontSize: 15, color: '#f5f5f5'}}>9:41</span>
+      <div style={{position: 'absolute', left: 0, top: 0, width: PHONE.screenW, height: 56, pointerEvents: 'none'}}>
+        <span style={{position: 'absolute', left: 34, top: 11, height: 34, lineHeight: '34px', fontFamily: FONTS.body, fontWeight: 600, fontSize: 16, letterSpacing: -0.2, color: '#f5f5f5'}}>9:41</span>
         <div style={{position: 'absolute', left: (PHONE.screenW - 118) / 2, top: 11, width: 118, height: 34, borderRadius: 17, background: '#000'}} />
-        <div style={{position: 'absolute', right: 30, top: 17, display: 'flex', gap: 5, alignItems: 'center'}}>
-          <Signal size={14} color="#f5f5f5" />
-          <Wifi size={14} color="#f5f5f5" />
-          <BatteryFull size={17} color="#f5f5f5" />
+        <div style={{position: 'absolute', right: 28, top: 11, height: 34, display: 'flex', gap: 6, alignItems: 'center'}}>
+          <SignalIcon />
+          <WifiIcon />
+          <BatteryIcon />
         </div>
       </div>
       <div style={{position: 'absolute', left: (PHONE.screenW - 134) / 2, top: PHONE.screenH - 14, width: 134, height: 5, borderRadius: 3, background: 'rgba(245,245,245,0.85)', pointerEvents: 'none'}} />
