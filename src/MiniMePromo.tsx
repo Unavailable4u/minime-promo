@@ -1,6 +1,7 @@
 import React from 'react';
-import {AbsoluteFill, useCurrentFrame} from 'remotion';
+import {AbsoluteFill, Html5Audio, Sequence, staticFile, useCurrentFrame} from 'remotion';
 import {INTRO} from './config/intro';
+import {MUSIC, MUSIC_ENABLED, SFX_CUES, musicVolumeAt} from './config/sfx';
 import {SURFACE} from './config/theme';
 import {FPS, SCENES, STAGE, UI, UI_OFFSET} from './config/timeline';
 import {Camera, useCameraState} from './fx/Camera';
@@ -25,6 +26,8 @@ import {OUTRO} from './config/outro';
  *                     screen: the scene overlays (captions, callouts, headline, lockup ...)
  *   4. vignette       12%
  *   5. grain          3.5%, re-seeded every frame
+ *   (audio)           <AudioLayer/>, a sibling of the picture: every SFX cue in its own <Sequence>, plus the optional
+ *                     music track. All timing comes from src/config/sfx.ts (patch 16).
  *
  * This file does not know any scene. Cameras, cursor waypoints, overlays, grid and window hooks all come from
  * src/scenes/index.ts, so replacing a scene file in a later patch never requires editing this file.
@@ -85,6 +88,30 @@ const World: React.FC<{frame: number}> = ({frame}) => {
   );
 };
 
+/**
+ * The sound (patch 16). One <Sequence> per cue of src/config/sfx.ts, each exactly as long as its WAV, so only the
+ * cues that are playing are mounted. The optional music track is mounted only when `npm run sfx` found
+ * public/audio/music.mp3 (see MUSIC_ENABLED): with no file the film plays with SFX only and a render can never fail
+ * on a missing track. Its volume is a pure function of the global frame (fade in, duck under impacts, fade out).
+ * Static: it takes no props, so it renders the same tree on every frame.
+ */
+const AudioLayer: React.FC = () => (
+  <>
+    {MUSIC_ENABLED ? <Html5Audio src={staticFile(MUSIC.src)} volume={musicVolumeAt} name="music" /> : null}
+    {SFX_CUES.map((cue, index) => (
+      <Sequence
+        key={`${index}-${cue.file}-${cue.frame}`}
+        from={cue.frame}
+        durationInFrames={cue.durationFrames}
+        layout="none"
+        name={`sfx ${cue.file}`}
+      >
+        <Html5Audio src={staticFile(`audio/${cue.file}.wav`)} volume={cue.volume} showInTimeline={false} />
+      </Sequence>
+    ))}
+  </>
+);
+
 export const MiniMePromo: React.FC = () => {
   const frame = useCurrentFrame();
   const gridOpacity = gridOpacityAt(frame);
@@ -95,19 +122,22 @@ export const MiniMePromo: React.FC = () => {
   );
 
   return (
-    <FontsReady>
-      <AbsoluteFill style={{background: SURFACE.stageGradient, overflow: 'hidden'}}>
-        {backdrop > 0.001 ? <AbsoluteFill style={{background: SURFACE.logoStage, opacity: backdrop}} /> : null}
-        <StageGlow frame={frame} />
-        {gridOpacity > 0.001 ? <GridFloor opacity={gridOpacity} frame={frame} /> : null}
+    <>
+      <FontsReady>
+        <AbsoluteFill style={{background: SURFACE.stageGradient, overflow: 'hidden'}}>
+          {backdrop > 0.001 ? <AbsoluteFill style={{background: SURFACE.logoStage, opacity: backdrop}} /> : null}
+          <StageGlow frame={frame} />
+          {gridOpacity > 0.001 ? <GridFloor opacity={gridOpacity} frame={frame} /> : null}
 
-        <Camera keyframes={ALL_CAMERA} dof={frame >= INTRO.dofOn} frame={frame} screen={<>{overlays}</>}>
-          <World frame={frame} />
-        </Camera>
+          <Camera keyframes={ALL_CAMERA} dof={frame >= INTRO.dofOn} frame={frame} screen={<>{overlays}</>}>
+            <World frame={frame} />
+          </Camera>
 
-        <Vignette strength={0.12} />
-        <Grain opacity={0.035} frame={frame} />
-      </AbsoluteFill>
-    </FontsReady>
+          <Vignette strength={0.12} />
+          <Grain opacity={0.035} frame={frame} />
+        </AbsoluteFill>
+      </FontsReady>
+      <AudioLayer />
+    </>
   );
 };

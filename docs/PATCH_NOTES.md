@@ -1109,3 +1109,50 @@ Apply AFTER 15E (it touches `docs/PATCH_NOTES.md`, which 15E also edits).
 
 ### Verified
 `npx tsc --noEmit` passes. `DevGraph` at frame 205 (both the large view and the 1:1 Working Panel slot) rendered: no dots on any edge, arrowheads and the amber halo unchanged.
+
+
+## PATCH 16 — Audio: SFX synthesizer, cue map, music slot (f0-1859)
+
+Written against the CURRENT film (1860 frames = 62 s, S6 = laptop + tablet + phone), not the 1740-frame brief.
+
+### Files created / changed
+- `scripts/make-sfx.mjs` (NEW): pure Node, no dependencies, seeded noise. Writes 21 WAVs (48 kHz, 16-bit) to `public/audio/` and `src/config/audioManifest.ts`.
+- `scripts/mix-audio.mjs` (NEW, extra): `npm run mix` lays the cues on a timeline -> `out/audio-mix.wav` (SFX only) and prints peak / RMS / clipping. Patch 17's pure-ffmpeg route can use that file.
+- `src/config/sfx.ts` (NEW): `SFX_CUES`, `MUSIC`, `MUSIC_ENABLED`, `IMPACT_FRAMES`, `musicVolumeAt(frame)`.
+- `src/config/audioManifest.ts` (NEW, GENERATED, committed so `tsc` passes before the first `npm run sfx`).
+- `src/MiniMePromo.tsx`: adds `<AudioLayer/>` (sibling of `<FontsReady>`); nothing else changed.
+- `package.json`: adds `"mix"`. `public/audio/*.wav` are committed (3.2 MB, deterministic; `npm run sfx` rewrites them identically).
+
+### Public API
+- `type SfxFile = keyof typeof AUDIO_MANIFEST.files`; `type SfxCue = {frame, file, volume (0..1), durationFrames, note}`.
+- `SFX_CUES: readonly SfxCue[]` sorted by frame, 264 cues. `volume` multiplies the level baked in the file (keys -24 dBFS, ui-tick / swish -18, tail -16, whoosh / shimmer / swell / riser -14, the rest -12).
+- `musicVolumeAt(frame): number` = -18 dB, sine fade-in 1.5 s, sine fade-out 2 s, -6 dB duck (3 f attack before, 18 f hold, 30 f release) under `IMPACT_FRAMES` (f60, f660, f916, f1650, f1800).
+- `MUSIC_ENABLED` is read from the manifest, never from disk at render time.
+
+### Files (sounds)
+key-1/2/3, send-pop, ui-tick, whoosh, swish, sub-impact, shimmer, chime, success, ping-0..5 (C5 D5 E5 G5 A5 C6), blip-low, riser, swell, tail. Extras beyond the brief: `swish` (drawers, small camera moves), `swell` (tier reveal), `success` (Output node).
+
+### Decisions and conventions
+- Every cue is DERIVED from film data, never typed twice: key ticks from `keystrokeFrames()` of `S2.prompt`, `S3.prompt`, `S4.prompt`, `S5.search.typing`; clicks from the `click: true` waypoints of `ALL_CURSOR` (so a click sound cannot drift from the cursor); step pings from the `end` frames of `S3_STEPS`, pitch stepping up the scale (the verifier's first run, `flash` f856, is the low blip instead; two steps ending on f912 share one ping); device scene from `DEVICE_TIMES`, `MOBILE_TIMES`, `OUTRO`. Retime the film and the audio follows.
+- Approve & run (f1244) is a `send-pop` instead of a tick. Enter keys (f324, f590, f1217) are a `key-3` tick, the send pop lands on the draft-clear frame (+2).
+- The riser starts on f1500 (spec) and its climax lands on f1559, one frame before the laptop edge trace (f1560). The swell is placed so its climax lands on the tier reveal (f660); `peakAt` in the manifest drives that.
+- One `<Html5Audio>` inside one `<Sequence layout="none">` per cue (exactly as long as its WAV), so only playing cues are mounted. `Html5Audio` is the non-deprecated name in the pinned Remotion 4.0.539.
+- Music: absent file means no `<Html5Audio>` is mounted. Add or remove `public/audio/music.mp3`, then run `npm run sfx` again (it rewrites `hasMusic`).
+- Determinism: no Math.random, Date, timers. Cue order is stable (frame, then insertion order); key variants use a seeded PRNG.
+
+### Verified
+- `npx tsc --noEmit` passes (strict). `@remotion/bundler` bundle of `src/index.ts` succeeds and contains all 21 WAVs.
+- `npm run mix`: 264 cues, peak -8.9 dBFS, RMS -29.2 dBFS, 0 clipped samples (loudest second: the f1800 end-card hit, RMS -18.1 dB).
+- Real Remotion audio render of f0-130 (local Chromium): silent until f57, the sub-impact peaks on f60 (-11.5 dB), the whoosh starts on f124. Same render with a throwaway music.mp3: fade-in, dip at f57-f61, then recovery. The throwaway file was deleted and the manifest regenerated (`hasMusic: false`).
+- Spectrograms of 13 sounds checked: sweeps rise, tones are clean, no DC offset, no NaN.
+
+### Known issues
+- Not listened to by a human ear (no audio device here): levels and timing are measured, taste is not. The first things to tweak are `volume` values in `sfx.ts` (key ticks, boot ticks f1654-1680, mode menu ticks) and the `-18 dB` music gain.
+- The 20 phone-boot ticks (one per 5 %) fall about 1.3 frames apart, a soft ratchet by design (volume 0.15 -> 0.40); thin them in `sfx.ts` (`BOOT_STEPS`) if it feels busy.
+- The S2 sidebar auto-title typing (f380-420) is deliberately silent (it is in the periphery).
+- Music is not part of `out/audio-mix.wav` (decoding mp3 needs ffmpeg); `npm run mix` prints the ffmpeg line that adds it.
+
+### Warnings for the next patch (17, render pipeline)
+- `scripts/render.mjs` must run `node scripts/make-sfx.mjs` first (it is idempotent and fast) so `public/audio/` and the manifest always match.
+- Remotion renders the audio itself; the loudnorm pass (I=-16, TP=-1.5, LRA=11) is the only post step. The SFX bed alone peaks at -8.9 dBFS, so the normalizer will only raise it a little.
+- Total film length is 1860 frames: do not hard-code 1740 / 58 s in the README or the GIF / loudnorm commands (`afade=t=out:st=60` in the `mix` hint is the music fade for a 62 s film).
