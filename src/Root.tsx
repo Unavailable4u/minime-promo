@@ -41,8 +41,14 @@ export const RemotionRoot: React.FC = () => {
       />
 
       {/*
-        DEV-ONLY compositions (not part of the film). Each dev patch adds one here.
-        Remove or keep them out of the final deliverable list in patch 17.
+        =====================================================================================================
+        DEV-ONLY compositions: NOT part of the film and never rendered by `npm run render`.
+        They are test sheets for single components (brand, fx, shell, panel, markdown, graph, app) and show
+        up in the Studio sidebar only. Delete any of them (and its file in src/dev/) when you no longer
+        need it; nothing in the film imports them.
+        There is deliberately NO vertical (1080x1920) composition: the brief says to skip it rather than
+        ship one that has not been verified to render correctly.
+        =====================================================================================================
       */}
       <Composition
         id="DevBrandSheet"

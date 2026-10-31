@@ -1156,3 +1156,67 @@ key-1/2/3, send-pop, ui-tick, whoosh, swish, sub-impact, shimmer, chime, success
 - `scripts/render.mjs` must run `node scripts/make-sfx.mjs` first (it is idempotent and fast) so `public/audio/` and the manifest always match.
 - Remotion renders the audio itself; the loudnorm pass (I=-16, TP=-1.5, LRA=11) is the only post step. The SFX bed alone peaks at -8.9 dBFS, so the normalizer will only raise it a little.
 - Total film length is 1860 frames: do not hard-code 1740 / 58 s in the README or the GIF / loudnorm commands (`afade=t=out:st=60` in the `mix` hint is the music fade for a 62 s film).
+
+
+## PATCH 17 — Render pipeline, README, stills check
+
+Written against the CURRENT film (1860 frames = 62 s, S6 = laptop + tablet + phone), not the 1740-frame brief.
+
+### Files created / changed
+```
+CREATED  scripts/render.mjs          scripts/check-stills.mjs          scripts/lib/pipeline.mjs
+CREATED  README.md
+CHANGED  package.json                (+ "render:preview"; the other scripts already pointed at these files)
+CHANGED  src/Root.tsx                (only the DEV-ONLY comment; the final compositions are untouched)
+CHANGED  docs/PATCH_NOTES.md
+```
+
+### Public API (command line)
+**`npm run render`** = `node scripts/render.mjs`. Modes: (none) 1080p master + poster + GIF | `--preview` | `--4k` | `--frames` | `--all`.
+`npm run render:preview|4k|frames|all` are the same script with the flag. Extra options go after `--`:
+`--concurrency=N`, `--browser-executable=PATH` (or env `REMOTION_BROWSER_EXECUTABLE`), `--gl=swangle` (or env `REMOTION_GL`), `--poster-frame=N` (default 1830), `--range=A-B` (render only these frames; the poster frame then counts inside the clip), `--skip-sfx`, `--skip-poster`, `--skip-gif`, `--keep-raw`, `--help`. Unknown options fail loudly.
+
+Outputs in `out/`: `minime-chat-promo-1080p30.mp4`, `poster.png`, `preview.gif`, `minime-chat-promo-4k.mp4`, `minime-chat-promo-preview.mp4`, `frames/element-0000.png ...`, `audio-mix.wav`, `minime-chat-promo-frames.mp4`.
+
+**`npm run check`** = `node scripts/check-stills.mjs`: stills at f60, 200, 330, 420, 640, 700, 860, 990, 1070, 1140, 1260, 1400, 1480, 1600, 1700 -> `out/stills/frame-NNNN.png` + `contact-sheet.png`. Options: `--frames=a,b,c`, `--scale=0.5`, `--composition=ID`, `--concurrency`, `--browser-executable`, `--gl`, `--keep-bundle`.
+
+**scripts/lib/pipeline.mjs** (shared by both scripts): `ROOT`, `OUT_DIR`, `log`, `fail(script, message, hints[])`, `parseArgs`, `intFlag`, `checkNode`, `checkInstalled`, `requireFfmpeg`, `ensureDir`, `removePath`, `fileSize`, `runStreaming`, `runCaptured`, `runFfmpeg`, `runRemotion`, `remotionRuntimeArgs(flags)`, `remotionHints(stderrTail)`, `hasAudioStream`, `measureLoudnorm`, `verifyLoudness`, `LOUDNESS {I -16, TP -1.5, LRA 11}`.
+
+### What the pipeline does
+1. Preflight: Node >= 20, `node_modules` present, `ffmpeg` on PATH (otherwise a numbered fix list for Windows / macOS / Linux).
+2. Runs `scripts/make-sfx.mjs` first (idempotent), so `public/audio` and `audioManifest.ts` always match the film.
+3. Remotion render (H.264, `--crf=16`, `--pixel-format=yuv420p`, `--audio-codec=aac`, `--audio-bitrate=192k`) to `out/.raw-*.mp4`. The Remotion CLI is started through `process.execPath` (no `npx`, no shell), so it works the same on Windows.
+4. Two-pass loudnorm (measure, then apply the measured values with `linear=true`; I=-16, TP=-1.5, LRA=11), video stream copied untouched, AAC 192 kbps at 48 kHz, `+faststart`. The result is measured again and printed.
+5. Poster: `select=eq(n\,FRAME)` on the final mp4 (default frame 1830, the complete end card; the fade to black starts at 1840).
+6. GIF: palettegen/paletteuse. A quality ladder tries 720 px / 15 fps first and steps down (colours, fps, width) until the file is <= 8 MB; it says which rung it used.
+7. 4K: same render with `--scale=2`. PNG sequence: `--sequence --image-format=png` to `out/frames`, then `scripts/mix-audio.mjs`, then ffmpeg assembles frames + `audio-mix.wav` with the same loudness filter.
+
+### Decisions and conventions
+- **The video render uses `--image-format=png`**, overriding the JPEG default in `remotion.config.ts`. With JPEG frames the mp4 came out `yuvj420p` (full range, `color_range=pc`); with PNG frames it is `yuv420p` (tv range), as the brief demands. Measured on a 16-frame test render of both. Cost: slower render. `remotion.config.ts` was NOT changed (the Studio keeps JPEG).
+- Stills in `check-stills.mjs` are rendered from ONE bundle (`remotion bundle --out-dir=out/.bundle`, then `remotion still <bundle dir> ...`), not 15 separate bundles. The bundle is deleted afterwards unless `--keep-bundle`.
+- A render without any audio (for example `--range=0-59`: the first sound is at f60) has no audio track; the loudness step detects that, warns and only remuxes with `+faststart` instead of failing.
+- The frame sequence assembly reads the real number padding from `out/frames` (`element-0000.png` for the full film, `element-40.png` for a short range) and offsets the audio by the first frame, so `--range` test renders assemble too.
+- Failure hints come from `remotionHints()`: Chrome download / `--browser-executable`, out of memory (`--concurrency`), timeouts, missing module, unknown composition. ffmpeg failures point at PATH, disk space and old builds.
+- `Root.tsx` registers `MiniMePromo`, `MiniMePromo-Preview` and, below a clear DEV-ONLY comment, the seven `Dev*` sheets. No vertical composition was added (the brief says to skip it unless verified).
+- The README documents the 62 s length and says the original brief's 58 s is outdated; it does not hard-code 1740 anywhere.
+
+### Verified (sandbox: Linux, Node 22, ffmpeg from apt, Chrome 131 through `--browser-executable --gl=swangle`)
+- `npx tsc --noEmit` passes; `node --check` passes on all scripts.
+- `npm run check` (all 15 default frames at `--scale=0.5`, then 2 frames at full scale): 15 PNGs + contact sheet in about 1m 40s; the contact sheet was looked at.
+- `render.mjs --preview --range=0-89` and `--range=50-80`: mp4 at -16.0 LUFS; pix_fmt `yuv420p`, `color_range=tv`.
+- `render.mjs --range=40-99 --poster-frame=30` (master path): 1920x1080 h264 `yuv420p` + AAC, -16.0 LUFS, poster.png and preview.gif written (GIF 2.3 MB on the first rung).
+- `render.mjs --frames --range=40-99`: 60 PNGs, `mix-audio.mjs`, ffmpeg assembly -> h264 `yuv420p` + AAC mp4.
+- Error paths: ffmpeg not on PATH (numbered hints), unknown option, nonexistent `--browser-executable` (Chrome hint), silent range (remux instead of failure).
+
+### Known issues
+- **The full 1860-frame render was NOT run** in the sandbox (software GL: about 2 minutes for 60 frames at 1080p, so an estimated hour or more for the film). Short `--range` renders exercised every step; the full film, the 4K render and the full-length GIF size were not measured. A GIF of 62 s may fall to a lower ladder rung than 720 px / 15 fps; the script reports it.
+- True peak after the AAC re-encode was -4.8 to -6.7 dBTP on the short test clips (limit -1.5), so no clipping risk was seen; the full film's loudest section (end-card hit, RMS about -18 dB before normalisation) was not re-measured after normalisation.
+- `render:all` renders the film three times (master, 4K, PNG sequence).
+- `check-stills.mjs` uses the `concat` demuxer for the contact sheet; if ffmpeg fails there it only warns.
+- The Windows paths in the hints were not run on Windows. The scripts use no shell and `node:path` only.
+- Motion and sound have not been reviewed by a human (same as patches 08-16).
+
+### Warnings for the next patch (18, QA)
+- Run `npm run check`, open every still and the contact sheet, then do one full `npm run render` on the target Windows machine; the first full render is the real test of memory (`--concurrency`) and of the GIF size.
+- If a different poster is wanted, pass `--poster-frame=N`; the clean end-card hold is f1816-1839.
+- Do not switch the video render back to JPEG without fixing the `yuvj420p` tagging.

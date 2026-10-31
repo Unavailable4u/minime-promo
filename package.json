@@ -13,6 +13,7 @@
     "mix": "node scripts/mix-audio.mjs",
     "check": "node scripts/check-stills.mjs",
     "render": "node scripts/render.mjs",
+    "render:preview": "node scripts/render.mjs --preview",
     "render:4k": "node scripts/render.mjs --4k",
     "render:frames": "node scripts/render.mjs --frames",
     "render:all": "node scripts/render.mjs --all",
