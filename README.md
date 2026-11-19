@@ -91,6 +91,7 @@ height estimates (`measureRows` in `DevApp`).
 | `npm run render:frames` | `out/frames/element-0000.png ...` + `out/audio-mix.wav` + `out/minime-chat-promo-frames.mp4` (the ffmpeg route below) |
 | `npm run render:all` | master, 4K and PNG sequence |
 | `npm run render:preview` | 960x540 draft, no poster / GIF (fast) |
+| `npm run short` | `out/minime-chat-promo-short.mp4`: a silent clip of under 8 s cut from the film you already rendered (see below) |
 
 Options go after `--`, for example `npm run render -- --concurrency=2`:
 
@@ -106,6 +107,14 @@ Options go after `--`, for example `npm run render -- --concurrency=2`:
 
 The master uses **PNG frames** (not JPEG) on purpose: JPEG frames make ffmpeg tag the video `yuvj420p` (full range),
 PNG frames give a normal `yuv420p`. The price is a somewhat slower render.
+
+### A short clip (under 8 s, no audio)
+
+`npm run short` cuts three moments out of `out/minime-chat-promo-1080p30.mp4` (the team assembling in the routing graph,
+"Approve & run", the laptop and phone scene) and joins them into `out/minime-chat-promo-short.mp4`: 7.6 s, no logo, no
+reveal, no end card, no audio. It only runs ffmpeg on the finished film, it does not re-render. Use
+`npm run short -- --src="C:\path\to\film.mp4"` for a film in another place, and edit `SEGMENTS` at the top of
+`scripts/make-short.mjs` to pick other moments.
 
 ### The exact Remotion command (without the script)
 

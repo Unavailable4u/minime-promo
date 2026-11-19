@@ -17,6 +17,7 @@
     "render:4k": "node scripts/render.mjs --4k",
     "render:frames": "node scripts/render.mjs --frames",
     "render:all": "node scripts/render.mjs --all",
+    "short": "node scripts/make-short.mjs",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
