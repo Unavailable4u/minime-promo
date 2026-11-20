@@ -208,7 +208,7 @@ Format: section, headline (12 words or fewer), layout, what is on it, word budge
 
 ### Slide 4. Solution 2 of 3, idea to plan (paper) · D2
 - **Headline:** "One prompt becomes a PRD, an architecture and a 3D blueprint."
-- **Layout:** the same real project (battery-powered plant soil-moisture monitor) in four framed shots: `prd` (prompt and PRD), `arch` (architecture diagram), `blueprint` (3D blueprint and parts list), `research` (sources, searchable), each with a mono caption and one pin; a chevron path "Prompt, PRD, Architecture, Blueprint" along the top.
+- **Layout:** the same real project (battery-powered plant soil-moisture monitor) in four framed shots: `prd` (the generated PRD itself: the parts table in the Plan tab; the prompt is not in this shot), `arch` (architecture diagram), `blueprint` (3D blueprint and parts list), `research` (sources, searchable), each with a mono caption and one pin; a chevron path "Prompt, PRD, Architecture, Blueprint" along the top.
 - **Budget:** 60.
 
 ### Slide 5. Solution 3 of 3, build, test, grow (paper) · D2
@@ -264,7 +264,7 @@ Format: section, headline (12 words or fewer), layout, what is on it, word budge
 |---|---|---|---|---|
 | D0 | none | scaffold, scripts, composition | nothing | **Done** |
 | D1 | 1 cover, 2 problem | **v2 reset:** new design system (paper and ink, Newsreader and JetBrains Mono), 11-slide plan, this guide, rules and word budgets, slides 1 and 2 | nothing | **Done** |
-| D2 | 3, 4, 5 (solution) | landing and nav annotation, idea-to-plan grid, build-test-grow columns | optional re-capture (5.3) | |
+| D2 | 3, 4, 5 (solution) | landing and nav annotation, idea-to-plan grid, build-test-grow columns | optional re-capture (5.3) | **Done** |
 | D3 | 6, 7, 8 (process, business, competition and market) | routing graph with pins, plan cards and gross-profit bars, positioning map and rings | U13, U5, U11 (all optional) | |
 | D4 | 9, 10, 11 (team, traction and projection, ask and close) | founder cards, MRR bars, capital bar, closing QR | U1 why-us lines, U2, U6 to U10, U12 | |
 | D5 | none | export polish, speaker notes check, final QA, PDF size | nothing | |

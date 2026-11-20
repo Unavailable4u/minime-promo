@@ -1293,3 +1293,26 @@ Replaces the first D1 (never merged). Built on top of D0. Why: the first D1 slid
 - The first D1 patch must not be applied. If it already was, `git revert` it before applying this one.
 - Word counts: slide 1 is 31 of 40, slide 2 is 66 of 70.
 - The tier descriptions on slide 6 are left to the founders (U13): the repo only proves the tier names.
+
+---
+
+## PATCH D2 — Solution slides 3, 4 and 5
+
+Built on top of D1 (v2). Adds the three "solution" slides of guide section 6; slides 1 to 5 are now built, 6 to 11 are not.
+
+### What changed
+- **Slide 3, the promise (`S03`):** the real landing hero with its own promise line; under it the tab row of the real workspace (`CROPS.navStrip`, account name cropped out, rule H8). Four crimson brackets under the strip mark the seven lifecycle stages in four groups (`NAV_STAGES`: Chat | Notebooks | Research and Plan | Build, Test and Growth), each with a numbered pin. Right: a legend of the four pins (the notebook mind map small next to pin 2) and two numerals read from `facts.ts` (11 tabs, 7 stages).
+- **Slide 4, idea to plan (`S04`):** one real project (the plant soil-moisture monitor) in four framed shots with a numbered pin and a mono caption each: the generated PRD, the architecture diagram, the 3D blueprint with parts list, the research sources. Chevron path "Prompt, PRD, Architecture, Blueprint" along the top. **The first shot shows the PRD itself** (parts table, cost line, start of the block diagram), not the prompt bubble; its caption is "The generated PRD".
+- **Slide 5, build, test, grow (`S05`):** three columns: code editor (`build`), persona cards (`test`), content fan-out (`growth`). Each has a numbered pin with a mono head, a caption and one detail line read off the screenshot. The three crops share one aspect ratio so the shots are the same height.
+- **`shots.ts`:** `CROPS` gets `navStrip`, `notebooksMap`, `planPrd`, `planArch`, `planBlueprint`, `researchSources`, `buildEditor`, `testPersonas`, `growthFanout`; new `NAV_STAGES`. Each crop leaves out the sidebar (throwaway project names), the account name and the taskbar. The `test` crop stops at x 1145, so the raw `<br>` table is not in it. The `arch` crop starts at y 196 because a half-cut line of the diagram source shows above that. The `build` crop starts below the header row so it carries no project name and cuts no button.
+- **`kit.tsx`:** new `PinDot` (a pin that sits in the flow, for legends and captions), `ChevronPath`, `splitLabel` ("Name: caption" split at the first colon).
+- **`words.ts`:** slide 3 loses the line "11 tabs. 7 lifecycle stages. One workspace." (the numerals now say it) and gains three captions; slide 4 gets the chevron step names in `graphic`; slide 5 gets three detail lines; speaker notes written for slides 3, 4 and 5 (one true line each, no numbers).
+- **`Deck.tsx`:** `3: S03, 4: S04, 5: S05` in the BUILT block.
+
+### Verified (sandbox: Linux, Node 22, system Chrome via `--browser-executable --gl=swangle`)
+`npx tsc --noEmit`, `npm run deck:check` (including the PDF checks) and `npm run deck` pass; PDF is 5 pages, 1920 x 1080, 1.2 MB. Every new slide was rendered and looked at. Word counts: slide 3 is 47 of 60, slide 4 is 34 of 60, slide 5 is 49 of 60. Not verified: slides 6 to 11 (not built), the Studio by eye.
+
+### Notes and open points
+- **Tier name (still open, for D3):** slide 6 must pick "Adaptive" (`facts.routing`) or "Ultimate Structure" (what the real UI shows in the chat screenshot). Slides 3 to 5 show no tier names.
+- **Optional re-capture (guide 5.3) was not done.** The crops avoid the throwaway sidebar names instead. The `build` shot is the small demo file `k.py`, and the slide does not say it is the plant monitor.
+- Slide 4's shots are small (about 0.4x), so their inner text is not meant to be read; the shapes (diagram, 3D layout, tables) are. The PRD shot shows only the lower part of the PRD because that is what the capture holds.

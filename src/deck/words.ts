@@ -54,34 +54,48 @@ export const WORDS: Readonly<Record<number, SlideWords>> = {
     notes:
       'This is a real prompt from our own product. The answer is good. The project is not done. Research, plan, build, test, launch: each needs the context again.',
   },
-  // 3. Solution, the promise. The seven stage names come from facts.stages (marked on the nav strip).
+  // 3. Solution, the promise. The first four labels are the legend of the pins on the nav strip ("Name: what it does", split at
+  // the colon by splitLabel()); the next three are the captions of the two shots and of the numerals (11 tabs, 7 stages come from facts).
   3: {
     headline: 'One AI carries it start to finish.',
-    lines: ['{tabs.count} tabs. {stages.count} lifecycle stages. One workspace.', 'Same project, same workspace, every stage.'],
+    lines: ['Same project, same workspace, every stage.'],
     labels: [
       'Chat: describe the idea in plain words',
       'Notebooks: mind maps and quizzes',
       'Research and Plan: understand it, design it',
       'Build, Test and Growth: make it, ship it',
+      'Our landing page',
+      'workspace tabs',
+      'lifecycle stages',
     ],
     graphic: ['The solution'],
-    notes: '',
+    notes: 'One workspace holds the whole project, so the idea carries from the first chat to the last stage.',
   },
-  // 4. Product, idea to plan (one real project, three real screens plus research)
+  // 4. Product, idea to plan (one real project, three real screens plus research). The chevron path uses graphic[1..4].
   4: {
     headline: 'One prompt becomes a PRD, an architecture and a 3D blueprint.',
     lines: ['One real project: a battery-powered plant soil-moisture monitor.'],
-    labels: ['The prompt and the generated PRD', 'The architecture diagram', 'The 3D blueprint and parts list', 'Research sources, searchable'],
-    graphic: ['Idea to plan'],
-    notes: '',
+    labels: ['The generated PRD', 'The architecture diagram', 'The 3D blueprint and parts list', 'Research sources, searchable'],
+    graphic: ['Idea to plan', 'Prompt', 'PRD', 'Architecture', 'Blueprint'],
+    notes: 'One real project, end to end: a plant soil-moisture monitor, from a single prompt to a plan, a diagram and a 3D layout of the parts.',
   },
   // 5. Product, build test grow. Do not imply the Build shot is the plant monitor (it is a small snippet).
+  // The first three labels are "Name: caption": the name is the column head, the caption sits under the shot (splitLabel()).
+  // The next three are one short detail line per column, each read off the screenshot itself (file tree and editor; the persona
+  // cards enthusiast, skeptic and critic; "write the core message once, pick the platforms").
   5: {
     headline: 'Then build it, test it with personas, and grow it.',
     lines: ['A code editor, simulated customers and content fan-out sit in the same workspace.'],
-    labels: ['Build: a code editor', 'Test: simulated customer personas', 'Growth: one post, many platforms'],
+    labels: [
+      'Build: a code editor',
+      'Test: simulated customer personas',
+      'Growth: one post, many platforms',
+      'File tree and editor.',
+      'Enthusiast, skeptic and critic.',
+      'Write once, pick the platforms.',
+    ],
     graphic: ['Build, test, grow'],
-    notes: '',
+    notes: 'The same workspace goes on to code, simulated customers and content for launch. The editor shown holds a small demo file.',
   },
   // 6. Process, how one task flows. Tier names come from facts.routing; tier notes from inputs.tierNotes (U13) when set.
   6: {

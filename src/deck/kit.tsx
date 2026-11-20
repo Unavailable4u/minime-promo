@@ -169,6 +169,79 @@ export const Pin: React.FC<{n: number; x: number; y: number; label?: string; sid
   </div>
 );
 
+/**
+ * A numbered pin that sits in the flow (legends, column heads, captions) instead of over a screenshot. Same look as <Pin>
+ * (crimson disc, white mono numeral, white ring); not positioned. Pass `size` for a smaller one in a dense legend.
+ */
+export const PinDot: React.FC<{n: number; size?: number}> = ({n, size = PIN.diameter}) => (
+  <div
+    style={{
+      width: size,
+      height: size,
+      flexShrink: 0,
+      borderRadius: '50%',
+      backgroundColor: PALETTE.accent,
+      color: PALETTE.white,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontFamily: DECK_FONTS.mono,
+      fontWeight: 600,
+      fontSize: TYPE.label.size,
+      lineHeight: 1,
+      boxShadow: '0 6px 18px rgba(212, 20, 63, 0.35), 0 0 0 3px rgba(255, 255, 255, 0.9)',
+    }}
+  >
+    {n}
+  </div>
+);
+
+/**
+ * Splits a "Name: caption" label (words.ts) at the first colon into [name, caption]. `capitalise` upper-cases the first letter
+ * of the caption (for a caption set on its own line). A label without a colon comes back as [label, ''].
+ */
+export const splitLabel = (label: string, capitalise = false): [string, string] => {
+  const at = label.indexOf(': ');
+  if (at < 0) {
+    return [label, ''];
+  }
+  const rest = label.slice(at + 2);
+  return [label.slice(0, at), capitalise ? rest.charAt(0).toUpperCase() + rest.slice(1) : rest];
+};
+
+/**
+ * A chevron path: ink arrow-shaped steps that nest into each other, left to right ("Prompt, PRD, Architecture, Blueprint").
+ * The text is light on the ink fill, so the steps read the same on a paper page.
+ */
+export const ChevronPath: React.FC<{steps: readonly string[]}> = ({steps}) => {
+  const notch = 22;
+  const gap = 8;
+  return (
+    <div style={{display: 'flex', alignItems: 'center'}}>
+      {steps.map((step, i) => (
+        <div
+          key={step}
+          style={{
+            height: 56,
+            display: 'flex',
+            alignItems: 'center',
+            marginLeft: i === 0 ? 0 : gap - notch,
+            padding: `0 ${notch + 12}px 0 ${i === 0 ? 28 : notch + 14}px`,
+            backgroundColor: PALETTE.ink,
+            clipPath: `polygon(0 0, calc(100% - ${notch}px) 0, 100% 50%, calc(100% - ${notch}px) 100%, 0 100%, ${i === 0 ? 0 : notch}px 50%)`,
+          }}
+        >
+          <ThemeContext.Provider value="ink">
+            <Txt size="caption" tone="primary" style={{whiteSpace: 'nowrap'}}>
+              {step}
+            </Txt>
+          </ThemeContext.Provider>
+        </div>
+      ))}
+    </div>
+  );
+};
+
 /** Big serif numeral with an optional smaller "of N" and a mono caption under it. `value` comes from facts.ts. */
 export const Stat: React.FC<{
   value: string | number;

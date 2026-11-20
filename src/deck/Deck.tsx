@@ -9,6 +9,9 @@ import {Txt} from './Txt';
 import {CONTENT, SURFACES, TOTAL_SLIDES} from './theme';
 import {S01} from './slides/S01';
 import {S02} from './slides/S02';
+import {S03} from './slides/S03';
+import {S04} from './slides/S04';
+import {S05} from './slides/S05';
 
 /**
  * The deck is ONE composition, `MiniMeDeck`: 15 frames, slide N is frame N-1 (guide v2, section 7).
@@ -21,6 +24,9 @@ export const BUILT: Readonly<Record<number, React.FC>> = {
   // BUILT:START
   1: S01,
   2: S02,
+  3: S03,
+  4: S04,
+  5: S05,
   // BUILT:END
 };
 
