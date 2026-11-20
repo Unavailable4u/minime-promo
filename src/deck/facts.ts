@@ -251,3 +251,6 @@ export const formatShort = (n: number): string => {
 
 /** 3628 -> "$3,628". */
 export const formatUsd = (n: number): string => `${n < 0 ? '-' : ''}$${formatNumber(Math.abs(n))}`;
+
+/** 5.79 -> "$5.79"; 18.5 -> "$18.50"; 0.13 -> "$0.13". Always two decimals (money with cents). */
+export const formatUsdCents = (n: number): string => `${n < 0 ? '-' : ''}$${Math.abs(n).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;

@@ -50,7 +50,7 @@ export const SHOTS = {
     ...clean(1857, 971),
     shows: 'Tier 3 answer to the drone prompt, plus the Working Panel with the live routing graph',
     use: [2, 6],
-    note: 'Crop the user prompt bubble for slide 2 and the routing graph for slide 7. Sidebar shows throwaway project names: exclude it.',
+    note: 'Crop the user prompt bubble for slide 2 and the routing graph for slide 6. Sidebar shows throwaway project names: exclude it.',
   },
   chat_nav: {
     file: 'image copy 2.png',
@@ -131,7 +131,7 @@ export const SHOTS = {
     ...captured1080(),
     shows: 'Role Library with auto-generated role cards',
     use: [6],
-    note: 'Backs "59 agents, 46 roles".',
+    note: 'Backs "59 agents, 46 roles". Slide 6 uses CROPS.roleCards (the top bar shows a personal name: out, H8).',
   },
   research_chat: {
     file: 'image copy 5.png',
@@ -170,6 +170,14 @@ export type ShotId = keyof typeof SHOTS;
  *    raw <br> text sits at x > 1440: out of the crop.
  *  - growthFanout (growth): the Content Fan-out form (x 290..1180), tab row to the end of "Analytics (soon)"; sidebar and chat dock out.
  * The three crops of slide 5 share one aspect ratio, so the shots have the same height at the same width.
+ *
+ * Added in D3 (slide 6):
+ *  - routingGraph (chat): the inside of the routing-graph card of the Working Panel (card border x 1359..1831, y 484..935; the
+ *    crop stays 3 px inside it): the live graph of the Tier 3 drone answer shown on slide 2, with its status legend. The labels
+ *    in the graph overlap and are not meant to be read; it is the picture of the task's route. The Working Panel's step cards
+ *    above it, the chat and the sidebar are out. ROUTING_PINS below marks four nodes of it.
+ *  - roleCards (roles): the "coding (5)" group header and its first two rows of role cards (x 462..1387, y 312..742). The top bar
+ *    with the account name (y < 110) and the scrollbar (x > 1400) are out (H8).
  */
 export const CROPS = {
   splashLogo: {x: 463, y: 200, w: 933, h: 525},
@@ -184,6 +192,8 @@ export const CROPS = {
   buildEditor: {x: 56, y: 100, w: 690, h: 541},
   testPersonas: {x: 290, y: 228, w: 855, h: 672},
   growthFanout: {x: 290, y: 176, w: 890, h: 698},
+  routingGraph: {x: 1362, y: 488, w: 466, h: 444},
+  roleCards: {x: 462, y: 312, w: 925, h: 430},
 } as const satisfies Record<string, Crop>;
 
 /**
@@ -196,6 +206,19 @@ export const NAV_STAGES: readonly {x0: number; x1: number}[] = [
   {x0: 509, x1: 614},
   {x0: 631, x1: 793},
   {x0: 808, x1: 1031},
+];
+
+/**
+ * The four numbered pins of slide 6 on the routing graph (`chat`, source pixels): `node` is the node a pin marks (a ring is
+ * drawn round it), `pin` is where the numbered disc sits, in blank graph area, joined to the node by a thin leader line.
+ * Order = the legend: 1 Ask (the Input node), 2 Route (the classifier that chooses the tier), 3 Specialists work and recheck
+ * (the cluster of worker nodes), 4 Saved to the workspace (the Output node). Re-tune with <Shot id="chat" crop={CROPS.routingGraph} grid />.
+ */
+export const ROUTING_PINS: readonly {pin: {x: number; y: number}; node: {x: number; y: number}}[] = [
+  {pin: {x: 1790, y: 522}, node: {x: 1702, y: 592}},
+  {pin: {x: 1625, y: 514}, node: {x: 1611, y: 566}},
+  {pin: {x: 1790, y: 726}, node: {x: 1624, y: 668}},
+  {pin: {x: 1405, y: 818}, node: {x: 1481, y: 857}},
 ];
 
 /**

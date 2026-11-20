@@ -1316,3 +1316,32 @@ Built on top of D1 (v2). Adds the three "solution" slides of guide section 6; sl
 - **Tier name (still open, for D3):** slide 6 must pick "Adaptive" (`facts.routing`) or "Ultimate Structure" (what the real UI shows in the chat screenshot). Slides 3 to 5 show no tier names.
 - **Optional re-capture (guide 5.3) was not done.** The crops avoid the throwaway sidebar names instead. The `build` shot is the small demo file `k.py`, and the slide does not say it is the plant monitor.
 - Slide 4's shots are small (about 0.4x), so their inner text is not meant to be read; the shapes (diagram, 3D layout, tables) are. The PRD shot shows only the lower part of the PRD because that is what the capture holds.
+
+
+---
+
+## PATCH D3 — Process, business model, competition and market (slides 6, 7, 8)
+
+Built on top of D2. Slides 1 to 8 are now built; 9 to 11 (D4) are not.
+
+### What changed
+- **Slide 6, how one task flows (`S06`):** left, the real live routing graph from the Working Panel of the Tier 3 drone answer (`chat`, `CROPS.routingGraph`), shown at about 1.37x on purpose (`maxScale` 1.4: its labels overlap and are not meant to be read; it is the picture of the route). Four numbered pins with thin leader lines and a ring on the node each marks: 1 Ask (Input node), 2 Route (the classifier), 3 Specialists work and recheck (the worker cluster), 4 Saved to the workspace (Output node). Right: the pin legend, four tier cards (names from `facts.routing`, an effort meter, Tier 3 outlined because it is the tier the screenshot shows; one line each from `inputs.tierNotes` only when U13 is set), the numerals 59 and 46 and a small `roles` shot (`CROPS.roleCards`).
+- **Slide 7, business model (`S07`):** four plan cards (USD serif numeral, BDT price, the word "plan" in each heading; Free outlined), three gross-profit bars drawn with divs from `facts.gp`, three tiles (about 75% margin, about 36 Basic users, about $0.13 per free user) and the footnote "Launch plan, not live yet. Figures are assumptions, not results." Every number is status A, so "plan" stands beside each one (H1).
+- **Slide 8, competition, why now, market (`S08`):** a 2x2 positioning map in SVG (forgets to remembers, one answer to whole project) with four competitor categories and MiniMe, captioned "Our view." (H5: no competitor is named unless U11 is set, which adds a "Verified" row); three nested rings (students and indie builders paying in BDT, South Asia, World), not to scale, with U5 numbers and sources only when supplied; the secret sauce chips (memory + routing + the full lifecycle), the closing line and the why-now line.
+- **`shots.ts`:** `CROPS.routingGraph` (inside the graph card, x 1362..1828, y 488..932), `CROPS.roleCards` (the "coding (5)" header and its first two card rows, account name and scrollbar out, H8), `ROUTING_PINS` (pin and node points in source pixels). The `chat` note said "slide 7": it is slide 6.
+- **`kit.tsx`:** `dashes(dash, gap)` and `viewBoxOf(w, h)` for the SVG drawings. **`facts.ts`:** `formatUsdCents` (5.79 -> "$5.79", 18.5 -> "$18.50").
+- **`words.ts`:** slide 7 now has three lines, four labels and five graphic strings (unit, currency, "about", "plan") and a speaker note; slide 8 gains "Why now" (graphic[1]) and "Verified" (graphic[13]). Slide 6 text is unchanged.
+- **`Deck.tsx`:** `6: S06, 7: S07, 8: S08` in the BUILT block.
+- **`scripts/check-deck.mjs`:** the "number typed in JSX text" rule matched the `>` of arrow functions (`=> x`) and read code as text; it now skips a `>` that follows `=`.
+
+### Verified (sandbox: Linux, Node 22, Chromium 153 via `--browser-executable --gl=swangle`)
+`npx tsc --noEmit`, `npm run deck:check` (with the PDF checks) and `npm run deck` pass; the PDF is 8 pages, 1920 x 1080, 1.9 MB. Slides 6, 7 and 8 were rendered and looked at; two things were fixed after the first render (pin 4 sat on the graph's status legend; on slide 8 the MiniMe label touched its halo and the dashed quadrant lines ran through two category labels). Word counts: slide 6 is 52 of 75, slide 7 is 65 of 75, slide 8 is 41 of 80. Not verified: the Studio by eye, slides 9 to 11 (D4).
+
+### Notes and open points
+- **Tier name (open since D2):** slide 6 says "Adaptive" (`facts.routing`), but the screenshot on slide 2 reads "Tier 3 · Ultimate Structure" and "Ultimate" is also a plan name on slide 7. Decide which word the deck uses before D5; the fix is one string in `facts.routing` (and the check against `copy.ts`, if it reads it).
+- **U13 (tier notes) is still `null`:** the tier cards show names and the effort meter only. Fill `inputs.tierNotes` (Instant, Direct, Fixed, Adaptive, in that order) to add one line to each card.
+- **U5 (market numbers) is still `null`:** the rings are drawn without numbers. If supplied, `inputs.market` goes innermost ring first (students and indie builders, South Asia, World).
+- **U11 (verified competitors) is still `null`:** category dots only. When set, the two drawings shrink to make room for the "Verified" row.
+- The positions of the map's dots are the founders' opinion, labelled "Our view."; they are not data. "Code agents" sits just under the midline so its label does not clip the MiniMe quadrant.
+- The "Why now" line (models are cheap enough that a free tier is affordable) is a claim, not a fact from `facts.ts`: confirm it before the deck is sent.
+- Pin leader lines are in the graph's blank area but cross a few overlapping labels; the labels are not meant to be read.

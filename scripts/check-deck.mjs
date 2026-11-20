@@ -188,7 +188,8 @@ for (const file of slideFiles) {
       bad(`${rel(file)}: a string with a number ("${m[2].slice(0, 40)}"). Numbers come from facts.ts, text from words.ts.`);
     }
   }
-  for (const m of code.matchAll(/>([^<>{}]*\d[^<>{}]*)</g)) {
+  // (?<!=) skips the `>` of an arrow function (`=> x`), which is code, not the end of a JSX tag.
+  for (const m of code.matchAll(/(?<!=)>([^<>{}]*\d[^<>{}]*)</g)) {
     if (m[1].trim()) {
       bad(`${rel(file)}: a number is typed in JSX text ("${m[1].trim().slice(0, 40)}"). Read it from facts.ts.`);
     }

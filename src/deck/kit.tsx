@@ -242,6 +242,12 @@ export const ChevronPath: React.FC<{steps: readonly string[]}> = ({steps}) => {
   );
 };
 
+/** SVG `strokeDasharray` value for a dashed line: `dashes(8, 8)` -> "8 8". */
+export const dashes = (dash: number, gap: number): string => `${dash} ${gap}`;
+
+/** SVG `viewBox` value for a drawing that is `width` x `height` px: `viewBoxOf(900, 330)` -> "0 0 900 330". */
+export const viewBoxOf = (width: number, height: number): string => `0 0 ${width} ${height}`;
+
 /** Big serif numeral with an optional smaller "of N" and a mono caption under it. `value` comes from facts.ts. */
 export const Stat: React.FC<{
   value: string | number;

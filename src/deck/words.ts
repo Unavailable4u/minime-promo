@@ -105,22 +105,30 @@ export const WORDS: Readonly<Record<number, SlideWords>> = {
     graphic: ['How it works', 'Tier'],
     notes: 'We route by effort so simple questions stay instant and cheap, and hard ones get a team.',
   },
-  // 7. Business model and pricing. Plan names and prices come from facts.plans. Everything here is status A: say "plan".
+  // 7. Business model and pricing. Plan names and prices come from facts.plans. Everything here is status A: say "plan" (H1).
+  // lines: [0] footnote, [1] note on the Free card, [2] note on annual pricing. labels: [0] chart title, [1..3] the captions of the
+  // three tiles (their figures are read from facts by the slide). graphic: [0] section tag, [1] unit, [2] currency, [3] "about" (before a
+  // tile figure), [4] the word "plan" (after each plan name).
   7: {
     headline: 'Free to start, four plans, priced in BDT.',
     lines: [
       'Launch plan, not live yet. Figures are assumptions, not results.',
-      'Plan: about {margin.typicalGrossMarginPct}% gross margin on paid plans.',
-      'Plan: about {breakeven.basicUsers} Basic users cover lean infrastructure and the free tier.',
-      'A free user costs about ${free_cost.usdPerActiveFreeUserPerMonth} a month.',
-      'Annual costs {plans.annualMonths} times monthly.',
-      'Free plan: {plans.freeTokensPerMonth} tokens a month.',
+      'Free to start: {plans.freeTokensPerMonth} tokens a month.',
+      'Annual plan: {plans.annualMonths} times the monthly price.',
     ],
-    labels: [],
-    graphic: ['Business model', 'per month'],
-    notes: '',
+    labels: [
+      'Plan: gross profit per paid user',
+      'Plan: gross margin on a paid plan at typical use.',
+      'Plan: Basic users cover lean infrastructure and the free tier.',
+      'Plan: what one active free user costs a month.',
+    ],
+    graphic: ['Business model', 'per month', 'BDT', 'about', 'plan'],
+    notes: 'These are launch plans in dollars and taka. Every figure on this slide is an assumption until we have paying users.',
   },
-  // 8. Competition, why now, market. Axis names, categories and ring names are graphic.
+  // 8. Competition, why now, market. lines: [0] "Secret sauce: a + b + c." (split at the colon and at " + " by the slide), [1] the closing
+  // line, [2] the why-now line. labels: [0] MiniMe's dot, [1] the map caption. graphic: [0] section tag, [1] "Why now", [2..5] the
+  // axis ends (y low, y high, x low, x high), [6..9] the four competitor CATEGORIES (H5: no names), [10..12] the rings, inner to
+  // outer (U5 numbers go with them, in the same order), [13] "Verified" (the row that U11 competitors add under the map).
   8: {
     headline: 'Not another chat box: a workspace that carries the project.',
     lines: [
@@ -131,6 +139,7 @@ export const WORDS: Readonly<Record<number, SlideWords>> = {
     labels: ['MiniMe', 'Our view.'],
     graphic: [
       'Why us, why now',
+      'Why now',
       'one answer',
       'whole project',
       'forgets',
@@ -142,6 +151,7 @@ export const WORDS: Readonly<Record<number, SlideWords>> = {
       'Student and indie builders, paying in BDT.',
       'South Asia',
       'World',
+      'Verified',
     ],
     notes:
       'Honest note for the founders: the moat is early. The defensible part is the persistent workspace and routing, not any one model.',
