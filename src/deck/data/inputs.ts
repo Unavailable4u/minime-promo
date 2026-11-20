@@ -23,7 +23,7 @@ export type Advisor = {name: string; line: string};
 export type Competitor = {name: string; sentence: string};
 
 export type DeckInputs = {
-  /** U1. Slide 11 cannot be built without both founders (name, role, photo). */
+  /** U1. Slide 9 (team) cannot be built without both founders (name, role, photo). */
   founders: readonly Founder[] | null;
   /** U2. Left out of slide 15 when null. */
   contactEmail: string | null;
@@ -50,6 +50,8 @@ export type DeckInputs = {
   competitors: readonly Competitor[] | null;
   /** U12. What you want from the Sprint. null = Mentors, Pilot users, Pricing feedback. */
   sprintAsk: readonly string[] | null;
+  /** U13 (added in D1 v2). One short line per routing tier, in tier order (Instant, Direct, Fixed, Adaptive). null = tier names only. */
+  tierNotes: readonly string[] | null;
 };
 
 export const inputs: DeckInputs = {
@@ -58,7 +60,7 @@ export const inputs: DeckInputs = {
       name: 'S. M. Shuaib Islam Sayad',
       role: 'Co-Founder & CEO',
       whyUs: null,
-      linkedin: null,
+      linkedin: 'https://www.linkedin.com/in/unavailable4u/',
       photo: 'shuaib-islam.jpg',
       webp: 'shuaib-islam.webp',
     },
@@ -66,7 +68,7 @@ export const inputs: DeckInputs = {
       name: 'Shaikh Md Abu Ahad',
       role: 'Co-Founder & CTO',
       whyUs: null,
-      linkedin: null,
+      linkedin: 'https://www.linkedin.com/in/shaikh-md-abu-ahad-a79101442/',
       photo: 'shaikh-muhammad.jpg',
       webp: 'shaikh-muhammad.webp',
     },
@@ -82,4 +84,5 @@ export const inputs: DeckInputs = {
   seedFundName: null,
   competitors: null,
   sprintAsk: null,
+  tierNotes: null,
 };

@@ -1,45 +1,45 @@
-# MiniMe pitch deck: build guide and patch plan
+# MiniMe pitch deck: build guide and patch plan (v2)
 
-Drop this file into `docs/guide/PITCH_DECK_PATCHES.md` of `minime-promo`.
+Drop this file into `docs/guide/PITCH_DECK_PATCHES.md` of `minime-promo`. **v2 replaces v1** (15 dark crimson slides, 30 px floor, five-word slides). v1 was reviewed and rejected: too little design, too little information.
 
-Goal: a 15-slide, 16:9 PDF, 10 MB or less, for the INSEAD AI Founder Sprint form (field "Pitch Deck": PDF or PPTX, max 10 MB). Applications close 1 Dec 2026, 11:59 pm GMT+8.
+Goal: an **11-slide**, 16:9 PDF, 10 MB or less, for the INSEAD AI Founder Sprint form (field "Pitch Deck": PDF or PPTX, max 10 MB). Applications close 1 Dec 2026, 11:59 pm GMT+8. Eleven is under twelve, the same length class as the MiniLocker deck.
 
-The deck is built as code inside this repo, the same way `minilocker-film` built its deck: one Remotion composition, `MiniMeDeck`, where frame N-1 is slide N. A script renders the stills and joins them into one PDF.
+The deck is built as code inside this repo: one Remotion composition, `MiniMeDeck`, where frame N-1 is slide N. A script renders the stills and joins them into one PDF.
 
 ---
 
 ## 0. How to use this file
 
-1. Read sections 1 to 3 once. They are the rules, the open items only you can fill, and the facts sheet.
-2. Fill the open items in section 2 (the deck will not export while a built slide still shows a placeholder).
-3. Apply patches D0 to D5 in order (section 8). Every patch leaves a valid, exportable deck, so a partial deck is always shippable.
-4. To get a patch, paste its prompt from section 9 into Claude Code or Copilot in this repo, or ask Claude: "generate patch D1".
-5. After each patch, append an entry to `docs/PATCH_NOTES.md` (same format as the film patches) and update the status column in section 8.
+1. Read sections 1 to 3 once: the rules, the open items only the founders can fill, and the facts sheet.
+2. Fill the open items in section 2 (`src/deck/data/inputs.ts`). A `null` item has a default; a placeholder never reaches the PDF.
+3. Apply patches D0 to D5 in order (section 8). Every patch leaves a valid, exportable deck.
+4. To get a patch, paste its prompt from section 9 into Claude Code or Copilot in this repo, or ask Claude: "generate patch D2".
+5. After each patch, append an entry to `docs/PATCH_NOTES.md` and update the status column in section 8.
 
-If time runs out, the 9-slide cut is: 1, 2, 3, 4, 8, 11, 12, 13, 15.
+If time runs out, the 8-slide cut is: 1, 2, 3, 4, 6, 7, 9, 11.
 
 ---
 
 ## 1. Rules
 
-These come from three sources: the SSTTAPI framework (Adnan Dewan), your own verdicts on the MiniLocker deck, and the form limits.
+These come from the SSTTAPI framework (Adnan Dewan), the founders' verdicts on the MiniLocker deck, the five reference templates reviewed in D1 (a history project, a red and white corporate deck, a dark gold leadership deck, a law-firm deck, a business deck), and the form limits.
 
-### 1.1 Hard rules (the export script enforces most of them)
+### 1.1 Hard rules (the scripts enforce most of them)
 
 | # | Rule | Source |
 |---|---|---|
-| R1 | 15 slides maximum. This deck has exactly 15. | SSTTAPI |
-| R2 | Minimum text size 30 px on the 1920x1080 canvas. Text inside a real screenshot is exempt (it is a picture). | SSTTAPI |
-| R3 | Two typefaces: Sora (headings, numerals), Inter (everything else). No third face. | SSTTAPI |
-| R4 | Two colours: crimson `ACCENT.base` (#FF2052) plus the neutral ramp (near-black ground, white and grey text). Status colours appear only inside screenshots. | SSTTAPI |
-| R5 | Image first. Each slide's main area is a real screenshot or one clean graphic. Text is key words only. | SSTTAPI + you |
+| R1 | **11 slides**, fewer than twelve. `TOTAL_SLIDES` in `src/deck/rules.ts`. | founders (v2) |
+| R2 | Minimum text size **22 px** on the 1920x1080 canvas: body 32, mono captions 22. Text inside a real screenshot is exempt (it is a picture). | v2 (v1 said 30 and made the slides empty) |
+| R3 | Two typefaces: **Newsreader** (serif: headlines, body, numerals, italic sublines) and **JetBrains Mono** (labels, captions, code). No third face. | v2 |
+| R4 | Neutral ink and paper, **one accent** (crimson) for the key word or number of a slide, **one data colour** (cobalt) for measured or positive numbers. Status colours appear only inside screenshots. The deck does not have to look like the MiniMe app: the screenshots bring that. | v2 |
+| R5 | Image first, and **informative**: each slide's main area is a real screenshot or one clean data graphic, annotated with numbered pins and short captions, next to the facts that explain it (see the MiniLocker deck). Not five words on a black slide. | SSTTAPI + founders (v2) |
 | R6 | Not an icon gallery. At most 3 icons in the whole deck. No emoji art. | SSTTAPI |
-| R7 | No web images, no stock, no "foreign" images. Only your own screenshots and your own photos. | SSTTAPI |
-| R8 | Start with a story and end with it. Slide 2 opens it, slide 15 closes it. | SSTTAPI |
-| R9 | Word budget per slide (section 6), counted by `scripts/check-deck.mjs` from `src/deck/words.ts`. Headline 8 words or fewer. | your verdict 1 |
-| R10 | Problem about 20 percent, solution about 60 percent, process about 20 percent of the Secret Sauce block (slides 2 to 7): 1 problem slide, 4 solution slides (3 to 6), 1 process slide (7). | your verdicts 2 and 3 |
-| R11 | Links are QR codes plus a short printed URL (30 px or larger). Nobody will type a long link. QR on slides 1, 12 and 15. | your verdict 4 |
-| R12 | The PDF is 10 MB or less. Target 7 MB. The script embeds JPEG pages and steps quality down until it fits. | form |
+| R7 | No web images, no stock, no "foreign" images. Only the founders' own screenshots and photos. | SSTTAPI |
+| R8 | Start with a story and end with it: slide 2 opens it, slide 11 closes it. Slides 1 and 11 are on ink, the rest on paper (bookends). | SSTTAPI |
+| R9 | Word budget per slide (section 6), counted by `scripts/check-deck.mjs` from `src/deck/words.ts`. Headline 12 words or fewer, two lines at most. | founders |
+| R10 | Secret Sauce block (slides 2 to 6): 1 problem slide, 3 solution slides (3 to 5), 1 process slide (6). Business model, competition and market, team, traction and projection, and the ask follow (7 to 11). | founders' verdicts 2 and 3 |
+| R11 | Links are QR codes plus a short printed URL. QR on slides 1 and 11, pointing to the **company website**. | founders |
+| R12 | The PDF is 10 MB or less. The script embeds JPEG pages and steps quality down until it is at most 9.0 MB. | form |
 
 ### 1.2 Honesty rules
 
@@ -50,7 +50,7 @@ These exist because a reviewer can click, ask, or compare. A smaller true deck b
 - **H3. Only real screenshots.** No mock-ups, no re-drawn UI. The promo film is a fictional animation, so nothing from it goes in this deck, including its stat chip "7 specialists, 1 recheck, 41.2 s" (scripted, not measured).
 - **H4. State plainly: pre-revenue, pre-launch.** Traction shows what exists (the built product), not users or revenue you do not have.
 - **H5. Competitors by category only,** unless you have personally verified a named product's claim (section 2, U11). The map is labelled "our view".
-- **H6. Never write:** "revolutionary", "first ever", "10x", "guaranteed", "unlimited", "secure", "unhackable", "AI-proof". The AI-proof question gets an honest answer (slide 9), not a boast.
+- **H6. Never write:** "revolutionary", "first ever", "10x", "guaranteed", "unlimited", "secure", "unhackable", "AI-proof". The AI-proof question gets an honest answer (slide 8), not a boast.
 - **H7. Two founders.** The financial book was written for a solo founder. Anything that says "1 (you)" in the book becomes "2 founders" on the deck.
 - **H8. Privacy.** Do not use screenshots that show API key names or account credentials (see `image copy 14.png`, section 5). Crop out any personal name in the top bar if you want it private.
 
@@ -59,32 +59,34 @@ These exist because a reviewer can click, ask, or compare. A smaller true deck b
 - **"73 specialized agents" is wrong.** The feature guide says 73 Python modules in `backend/agents/`, of which **59 are specialist agent modules** and 14 are package or support modules, mapped across **46 router roles**. Say "59 specialist agents, 46 roles". If you pasted "73 agents" into the application form (elevator pitch or product description), change it to 59 before you submit.
 - The form's tech-stack answer mentions eight LLM providers. The rulebook describes eight providers in the planned production stack, and part of that is not yet paid or in production. Say "multi-provider routing" on the deck, not a provider count.
 
+
 ---
 
 ## 2. Open items only you can fill
 
-Put the answers in `src/deck/data/inputs.ts` (created in D0, every field starts as `null`). A slide that needs a `null` item uses the default in the last column. A placeholder string never reaches the PDF.
+Put the answers in `src/deck/data/inputs.ts`. A slide that needs a `null` item uses the default in the last column.
 
 | Id | What | Used on | If left empty |
 |---|---|---|---|
-| U1 | Both founders: name, role, one-line "why us", LinkedIn, **your own photo** | 11, 15 | Slide 11 cannot be built. The export script skips it. **D0 status: names, roles and photos are filled (`public/deck/people/`); "why us" and LinkedIn are still `null`, so those lines are left out until supplied.** |
-| U2 | Contact email | 15 | Omitted |
-| U3 | Live app URL, if anyone outside your machine can use it today. **MiniMe is not deployed yet: `null`.** | 1, 12, 15 | QR points to the company website (U4), and slide 12 says "pre-launch" |
-| U4 | **Changed in D0:** the company website, `https://www.wearenext.tech/` (printed as `wearenext.tech`). The MiniMe Atlas / `minimebook` site and repo are **not linked anywhere in the deck.** | 1, 12, 15 | Uses the known URL |
-| U5 | Market numbers, each with a source you can name (for example the number of students, developers or startups in Bangladesh, and in South Asia) | 10 | Slide 10 shows the beachhead and expansion path without numbers |
-| U6 | Advisors or mentors, if any | 11 | "Seeking: product and pricing mentors" |
-| U7 | Real testers, quotes, waitlist count, anything a user actually did | 12 | Omitted |
-| U8 | Awards, grants, hackathons, publications (the FBEBC preprint is planned, not published) | 12 | Omitted |
-| U9 | Equity split between the two founders | 11 | Shows "100% founders" only |
-| U10 | The name of the "Seed Fund" in the rulebook (it is unnamed there) | 14 | "Grant / seed-fund pilot (application Apr 2027)" |
-| U11 | Competitors you have personally verified, with one true sentence each | 9 | Category dots only |
-| U12 | What you want from the Sprint (mentorship, pilot users, pricing validation) | 14 | Those three, as written in slide 14 |
+| U1 | Both founders: name, role, one-line "why us", LinkedIn, **own photo**. **Status: names, roles, photos and LinkedIn URLs are filled; "why us" is still `null`.** | 1, 9, 11 | Slide 9 cannot be built (the export skips it). A `null` "why us" is left out. |
+| U2 | Contact email | 11 | Omitted |
+| U3 | Live app URL, if anyone outside your machine can use it today. **MiniMe is not deployed yet: `null`.** | 1, 10, 11 | QR points to the company website, and slide 10 says "pre-launch" |
+| U4 | The company website: `https://www.wearenext.tech/` (printed `wearenext.tech`). The MiniMe Atlas / `minimebook` site and repo are **not linked anywhere in the deck.** | 1, 11 | Known value |
+| U5 | Market numbers, each with a source you can name (students, developers or startups in Bangladesh and South Asia) | 8 | The three rings show without numbers |
+| U6 | Advisors or mentors, if any | 9 | "Seeking: product and pricing mentors" |
+| U7 | Real testers, quotes, waitlist count, anything a user actually did | 10 | Omitted |
+| U8 | Awards, grants, hackathons, publications (the FBEBC preprint is planned, not published) | 10 | Omitted |
+| U9 | Equity split between the two founders | 9 | Shows "100% founders" only |
+| U10 | The name of the "Seed Fund" in the rulebook (it is unnamed there) | 11 | "Grant / seed-fund pilot (application Apr 2027)" |
+| U11 | Competitors you have personally verified, with one true sentence each | 8 | Category dots only |
+| U12 | What you want from the Sprint | 11 | Mentors, pilot users, pricing feedback |
+| U13 | **New in v2.** One short line per routing tier (what Instant, Direct, Fixed and Adaptive each do), confirmed by the founders | 6 | Tier names only |
 
 ---
 
 ## 3. Facts sheet (becomes `src/deck/facts.ts`)
 
-Sources are files in the `minime_book` repo (the Atlas) unless noted. `V` = verified there, `T` = target, `A` = assumption.
+Sources are files in the `minime_book` repo unless noted. (The Atlas site and repo are internal sources only: they are never linked on the deck.) `V` = verified there, `T` = target, `A` = assumption.
 
 | Id | Value | Source | Status |
 |---|---|---|---|
@@ -112,52 +114,63 @@ Never on the deck: "73 agents", any user count, any revenue, any named-competito
 
 ---
 
-## 4. Design system
+---
 
-Reuse `src/config/theme.ts` and the fonts already vendored in `public/fonts` (Sora, Inter). Do not retype colours. The deck is dark so it matches the real screenshots (do not mix light and dark).
+## 4. Design system (v2)
+
+Colours, type and spacing live in `src/deck/theme.ts` (not in the film's theme). Slides never type a hex or a font size.
 
 | Token | Value |
 |---|---|
-| Canvas | 1920 x 1080. Content box starts at (96, 72), size 1728 x 920 |
-| Ground | `NEUTRAL[950]` |
-| Surface | `NEUTRAL[900]`, 1 px border `NEUTRAL[800]` |
-| Text | `NEUTRAL[100]` primary, `NEUTRAL[400]` secondary |
-| Accent | `ACCENT.base`, used for one thing per slide: the key word or the key number |
-| Display numeral | Sora 800, 160 to 220 px |
-| Headline | Sora 800, 76 px, 2 lines maximum |
-| Subline | Inter 500, 40 px |
-| Body and labels | Inter 500, 32 px (30 px is the floor) |
-| Screenshot frame | 1 px `NEUTRAL[800]`, radius 16, shadow `0 24px 80px rgba(0,0,0,0.5)`, never stretched, never upscaled past 1.0 |
-| Footer | Logo 40 px at left, "n / 15" at right, 30 px, `NEUTRAL[500]` |
-| QR | White tile with 4-module quiet zone, 280 px square or larger, URL printed under it at 30 px |
+| Canvas | 1920 x 1080. Content box starts at (96, 72), size 1728 x 920. Footer rule at y = 1016. |
+| Paper page | `#F2EFE8` with a 48 px grid at 4.5 percent and two soft washes (crimson top left, cobalt top right) |
+| Ink page (cover and close) | `#0D0D11` |
+| Card | `#FBF9F4` on paper (`#17171D` on ink), hairline `#DCD5C6`, radius 18, soft shadow |
+| Text (paper) | ink `#15161B`, secondary `#4B4B53`, muted `#7C7B80` |
+| Accent | crimson `#D4143F` on paper, `#FF4A6B` on ink: one thing per slide (the key word or number) |
+| Data colour | cobalt `#2447D6` on paper, `#7C9BFF` on ink: measured or positive numbers |
+| Cover title | Newsreader 124 px |
+| Display numeral | Newsreader 132 px, light, with a smaller italic "of N" when needed |
+| Headline | Newsreader 80 px, two lines at most |
+| Subline | Newsreader italic 42 px |
+| Body | Newsreader 32 px |
+| Label | JetBrains Mono 500, 24 px, caps, letter-spaced (section tags, column heads) |
+| Caption | JetBrains Mono 22 px (captions, units, short labels). 22 px is the floor. |
+| Section tag | "§ NN · tag" in the accent, top left (NN = slide number minus 1) |
+| Footer | hairline, "Next Inc · MiniMe · Pitch deck" left, "n / 11" right, mono 22 px |
+| Screenshot frame | hairline, radius 14, soft shadow; never stretched; never upscaled past 1.0 unless `maxScale` is raised on purpose |
+| Pin | 56 px crimson circle, white mono numeral, white ring; the label chip sits beside it in the blank area, never on top of screenshot text |
+| QR | White tile, 4-module quiet zone, 280 px or larger, URL printed under it |
 
-Enforcement: a `Txt` component takes `size: "display" | "headline" | "sub" | "body"` only (no free `fontSize`), so nothing can go below 30 px by accident. `scripts/check-deck.mjs` also fails on any `fontSize` literal under 30 inside `src/deck/` (the `Shot` internals are exempt).
+What was taken from the five reference templates: large light numerals and KPI tiles (red and white deck), dark bookend slides (gold leadership deck), image-led split layouts and numbered lists (law-firm and business decks), a warm paper ground with a classic serif (history deck). From the MiniLocker deck: section tags, italic sublines, annotated screenshots, pills, and slides that explain themselves.
+
+Enforcement: `Txt` takes `size` from eight presets only (no free `fontSize`, family, weight or colour in `style`). `scripts/check-deck.mjs` also fails on any `fontSize` literal under 22 inside `src/deck/` (the `Shot` internals are exempt). Fonts: Newsreader is vendored in `public/fonts/` (SIL Open Font License, from the `@fontsource/newsreader` package) and loaded by `src/deck/deckFonts.tsx`; rendering stays offline.
 
 ---
 
 ## 5. Screenshot catalogue
 
-All files are in `public/screenshots/`. Do not edit or rename them. `src/deck/shots.ts` maps a semantic id to a file, its natural size and a crop box `{x, y, w, h}` in source pixels. Crops are code, so they can be re-tuned in the Studio with a grid overlay (`<Shot grid />`).
+All files are in `public/screenshots/`. Do not edit or rename them. `src/deck/shots.ts` maps a semantic id to a file, its natural size and a crop box `{x, y, w, h}` in source pixels; named crops used by slides are in `CROPS`. Crops are code, so they can be re-tuned in the Studio with a grid overlay (`<Shot grid />`).
 
 ### 5.1 The 1920 x 1080 captures
 
-The unnamed 1920 x 1080 captures (`image.png` excepted) show the Windows taskbar down the right edge and the browser bar across the top. A pixel scan on three of them found the browser bar ends at about y = 114 and the taskbar starts at about x = 1850. So the **safe base crop for every 1920 x 1080 capture is `{x: 0, y: 116, w: 1838, h: 964}`**. Verify it once in the Studio on each file you use. `image copy 10.png` is 1536 x 864 and has the browser bar but no taskbar: measure its top bar in the Studio.
+The unnamed 1920 x 1080 captures show the Windows taskbar down the right edge and the browser bar across the top. A pixel scan of all thirteen found the browser bar ends at y = 109 and the taskbar starts at x = 1860. The **safe base crop is `{x: 0, y: 116, w: 1838, h: 964}`**; `DeckDevCrop` (`npx remotion still src/index.ts DeckDevCrop out/deck-crop-proof.png`) shows it.
 
 ### 5.2 Catalogue
 
 | Id | File | What it shows | Use on | Notes |
 |---|---|---|---|---|
-| landing | `image.png` (1856 x 973) | Landing hero: "From a rough idea to a finished build, carried by one AI, start to finish." | 1, 3 | Clean, no crop. The real promise line. |
-| splash | `image copy.png` | Logo glow loading screen | 1 | Crop to the logo and darken. It has tiny "initializing" text, so crop it out. |
-| chat | `01-chat.png` (1857 x 971) | Tier 3 answer to the drone prompt, plus the Working Panel with the live routing graph | 2, 3, 7 | Crop the user prompt bubble for slide 2. Crop the routing graph for slide 7. Sidebar shows throwaway project names: exclude it. |
+| landing | `image.png` (1856 x 973) | Landing hero: "From a rough idea to a finished build, carried by one AI, start to finish." | 3 | Clean, no crop. The real promise line. |
+| splash | `image copy.png` | Logo glow loading screen | 1 | Slide 1 uses `CROPS.splashLogo` (logo and glow; the tiny "initializing" text is outside the crop) on the ink cover. |
+| chat | `01-chat.png` (1857 x 971) | Tier 3 answer to the drone prompt, plus the Working Panel with the live routing graph | 2, 6 | Slide 2 uses `CROPS.chatExchange` (the prompt bubble and the top of the answer, at about 1.0x). Slide 6 crops the routing graph in the Working Panel. Sidebar shows throwaway project names: exclude it. |
 | chat_nav | `image copy 2.png` | Same chat with the full top nav (all 11 tabs) | 3 | Base crop, then use only the nav strip |
-| notebooks | `02-notebooks.png` | Mind map plus generated workflows | 4 | |
+| notebooks | `02-notebooks.png` | Mind map plus generated workflows | 3 | |
 | quiz | `image copy 4.png` | Notebook study mode: quiz | optional 4 | |
 | research | `03-research.png` | Research sources list with search | 4 | |
 | citations | `image copy 6.png` | Citation graph | optional 4 | |
-| prd | `image copy 7.png` | The plant-monitor prompt and the generated PRD | 15 | The prompt text is the closing story |
-| arch | `04-plan-architecture.png` | Architecture diagram (battery, converter, regulator, ESP32, sensors) | 4, 15 | |
-| blueprint | `05-plan-blueprint.png` | 3D blueprint with the parts list | 4, 15 | Strongest Plan visual |
+| prd | `image copy 7.png` | The plant-monitor prompt and the generated PRD | 4, 11 | The plant-monitor prompt and PRD (slides 4 and 11) |
+| arch | `04-plan-architecture.png` | Architecture diagram (battery, converter, regulator, ESP32, sensors) | 4, 11 | |
+| blueprint | `05-plan-blueprint.png` | 3D blueprint with the parts list | 4, 10, 11 | Strongest Plan visual |
 | build | `06-build.png` | Code editor | 5 | Do not imply this project is the plant monitor: it is a small `k.py` snippet |
 | test | `image copy 11.png` | Test tab: personas | 5 | **Visible raw `<br>` text in the table on the right.** Use only the left persona list, or fix the bug and re-capture |
 | growth | `image copy 12.png` | Growth: content fan-out to platforms | 5 | Clean |
@@ -165,199 +178,124 @@ The unnamed 1920 x 1080 captures (`image.png` excepted) show the Windows taskbar
 | tokens | `image copy 14.png` | Token Usage | **never** | Shows API key names and a zero-credit Free plan (rule H8) |
 | research_chat | `image copy 5.png` | Research tab with chat | skip | Duplicate of `research` |
 
+
 ### 5.3 Optional re-capture pass (20 minutes, strongly recommended before D2)
 
 The sidebars show throwaway project names ("rgjn", "sdfjk", "hjkl"), which look unprofessional at deck size. If you do not want to crop around them, re-capture in Chrome at 1600 x 900, dark theme, with a clean account whose projects are named "Plant monitor", "Drone", "Research notes". Capture: Chat (Tier 3 answer with the routing graph), Plan (blueprint), Research (sources), Build, Growth, Role Library. Keep the same file ids. Do not stage data: capture what the product really did.
 
 ---
 
-## 6. Slide specs
+---
 
-Format: SSTTAPI part, headline (8 words or fewer), visual, word budget (all visible words except numerals and the footer), facts used, the line the founder says aloud (goes in speaker notes in `words.ts`, not on the slide).
+## 6. Slide specs (11 slides)
 
-**1. Cover** (opening)
-- Headline: "From a rough idea to a finished build."
-- Sub: "One AI workspace, start to finish."
-- Visual: `splash` logo glow as the ground, MiniMe wordmark, QR (U3 if present, else the company website U4) with the printed short URL.
-- Small line (30 px): "Next Inc. Two founders. Rajshahi, Bangladesh."
-- Words: 20. Facts: promise, company.
-- Say: "We are building the AI that does not forget your project halfway through."
+Format: section, headline (12 words or fewer), layout, what is on it, word budget (headline + lines + labels; section tags, axis and plan names do not count), facts used, the line the founder says aloud (speaker notes in `words.ts`, never on the slide). Every slide is dense on purpose: a real screenshot with pins and captions, plus the facts that explain it.
 
-**2. Problem, the story** (Secret Sauce 1)
-- Headline: "A chat answers once. A project takes months."
-- Visual: the real drone prompt bubble from `chat`, very large, centred. A single line under it: "Then what?"
-- Words: 14. Facts: none.
-- Say: "This is a real prompt from our own product. The answer is good. The project is not done. Research, plan, build, test, launch: each needs the context again."
-- This slide replaces the old text-heavy slide 2. No bullet list.
+### Slide 1. Cover (ink) · built in D1
+- **Headline:** "From a rough idea to a finished build." Subline (italic): "One AI workspace, start to finish." Pill: "Pre-launch".
+- **Layout:** wordmark top left, "Next Inc · Pre-Seed · Rajshahi, Bangladesh" top right (mono); real splash logo glow on the right; four serif numerals (11 workspace tabs, 59 specialist agents, 46 agent roles, 4 routing tiers) with mono captions; founders' names and roles; QR tile bottom right with the printed URL (`inputs.liveUrl ?? inputs.companyUrl`).
+- **Budget:** 40. **Facts:** company, tabs, agents, routing. **Say:** "We are building the AI that does not forget your project halfway through."
 
-**3. Solution, the promise** (Secret Sauce 2, solution 1 of 4)
-- Headline: "One AI carries it start to finish."
-- Visual: `landing` or `chat` as the hero, with the nav strip from `chat_nav` above it, the seven lifecycle stage names in the strip marked in accent.
-- Words: 12. Facts: promise, tabs.
+### Slide 2. Problem, the story (paper) · built in D1
+- **Headline:** "A chat answers once. A project takes months." Italic subline: "A real prompt from our own product. The answer is good. The project is not done."
+- **Layout:** left, the real drone prompt and the top of the real Tier 3 answer (`CROPS.chatExchange`, about 1.0x, fading out at the bottom) with pins 1 "Real prompt" and 2 "Real answer"; right, five cards (research, plan, build, test, launch) under "What the project still needs", the line "Each step needs the context again.", and "Then what?" in the accent.
+- **Budget:** 70. **Say:** "This is a real prompt from our own product. The answer is good. The project is not done. Research, plan, build, test, launch: each needs the context again."
 
-**4. Solution, understand and plan** (solution 2 of 4)
-- Headline: "Understand it. Plan it."
-- Visual: two framed shots side by side: `research` (left), `blueprint` (right, larger). One arrow drawn as SVG between them. Two labels, 30 px: "Research", "Plan".
-- Words: 10.
+### Slide 3. Solution 1 of 3, the promise (paper) · D2
+- **Headline:** "One AI carries it start to finish."
+- **Layout:** left, the real landing hero (`landing`, with its own promise line); under it the nav strip of `chat_nav` cropped to the tab row with the seven stage names marked (facts.stages) and four pins (Chat; Notebooks; Research and Plan; Build, Test and Growth) explained by a legend on the right; numerals 11 tabs and 7 stages. The `notebooks` shot appears small next to pin 2.
+- **Budget:** 60. **Facts:** tabs, stages, promise.
 
-**5. Solution, build, test, grow** (solution 3 of 4)
-- Headline: "Build it. Test it. Grow it."
-- Visual: three framed shots in a row: `build`, `test` (left persona list only), `growth`. Three labels.
-- Words: 10.
+### Slide 4. Solution 2 of 3, idea to plan (paper) · D2
+- **Headline:** "One prompt becomes a PRD, an architecture and a 3D blueprint."
+- **Layout:** the same real project (battery-powered plant soil-moisture monitor) in four framed shots: `prd` (prompt and PRD), `arch` (architecture diagram), `blueprint` (3D blueprint and parts list), `research` (sources, searchable), each with a mono caption and one pin; a chevron path "Prompt, PRD, Architecture, Blueprint" along the top.
+- **Budget:** 60.
 
-**6. Solution, the team inside** (solution 4 of 4)
-- Headline: "A whole team, routed by effort."
-- Visual: `roles` large on the left. On the right two display numerals: "59" agents, "46" roles. Beneath, four small labels: Instant, Direct, Fixed, Adaptive.
-- Words: 14. Facts: agents, routing.
+### Slide 5. Solution 3 of 3, build, test, grow (paper) · D2
+- **Headline:** "Then build it, test it with personas, and grow it."
+- **Layout:** three columns, one framed shot each: `build` (code editor; do not imply it is the plant monitor), `test` (persona list only, crop away the table with raw `<br>`), `growth` (content fan-out to platforms), each with a mono column head, a caption and a pin.
+- **Budget:** 60.
 
-**7. Process, how one task flows** (Secret Sauce, process)
-- Headline: "Ask. Route. Work. Remember."
-- Visual: the routing graph crop from `chat` (Working Panel), very large, with four numbered pins using `mapPoint`: 1 Ask, 2 Route (tier chosen), 3 Specialists work and recheck, 4 Saved to the workspace.
-- Words: 18. Facts: routing.
-- Say: "We route by effort so simple questions stay instant and cheap, and hard ones get a team."
+### Slide 6. Process, how one task flows (paper) · D3
+- **Headline:** "We route by effort, so hard tasks get a team."
+- **Layout:** left, the real live routing graph from the Working Panel of `chat` with pins 1 Ask, 2 Route (tier chosen), 3 Specialists work and recheck, 4 Saved to the workspace; right, four tier cards (facts.routing names, `inputs.tierNotes` lines when U13 is set), two serif numerals (59 specialist agents, 46 roles) and a small `roles` shot.
+- **Budget:** 75. **Say:** "We route by effort so simple questions stay instant and cheap, and hard ones get a team."
 
-**8. Business model and pricing** (Secret Sauce 3 and 4)
-- Headline: "Free to start. Four plans."
-- Visual: four columns, each with a display numeral: $0, $9, $29, $79 per month, and below it the BDT price (899, 2,999, 8,499). One accent line: "Local BDT pricing."
-- Label (30 px): "Launch plan, not live yet." Facts: plans (status A).
-- Words: 14.
+### Slide 7. Business model and pricing (paper) · D3
+- **Headline:** "Free to start, four plans, priced in BDT."
+- **Layout:** four plan cards (Free, Basic, Moderate, Ultimate) with serif USD numerals and BDT prices (facts.plans); under them a bar chart of gross profit per paid user per month (facts.gp) with the word "plan"; three data tiles: about 75 percent gross margin, about 36 Basic users to cover lean infrastructure and the free tier, about $0.13 a month per free user; footnote "Launch plan, not live yet. Figures are assumptions, not results."
+- **Budget:** 75. **H1:** every number here is status A: the word "plan" stays beside it.
 
-**9. Competition, secret sauce and AI-proof** (Secret Sauce 5, 6, 7)
-- Headline: "Not another chat box."
-- Visual: a two-axis map drawn in SVG. X axis: "one answer" to "whole project". Y axis: "forgets" to "remembers". Category dots only (chat assistants, code agents, app builders, note and research tools) unless U11 supplies verified names. MiniMe sits top right. Corner label: "Our view."
-- Under it, two lines: "Secret sauce: memory + routing + the full lifecycle." "Models improve. We route to them. The workspace is the product."
-- Words: 25. Honest note for the founders: the moat is early. The defensible part is the persistent workspace and routing, not any one model.
+### Slide 8. Competition, why now, market (paper) · D3
+- **Headline:** "Not another chat box: a workspace that carries the project."
+- **Layout:** left, a 2x2 positioning map (one answer to whole project; forgets to remembers) with four category dots (chat assistants, code agents, app builders, note and research tools) and MiniMe in the accent, captioned "Our view."; right, three nested rings (Student and indie builders paying in BDT; South Asia; World) with U5 numbers and sources only if supplied; bottom, the secret sauce (memory + routing + the full lifecycle), "Models improve. We route to them. The workspace is the product." and the why-now line.
+- **Budget:** 80. **Honest note (speaker):** the moat is early; the defensible part is the persistent workspace and routing, not any one model.
 
-**10. Scalability, market and why now** (Scalability 1)
-- Headline: "Start in Bangladesh. Then everywhere."
-- Visual: three nested rings (beachhead, region, world). Beachhead label: "Student and indie builders, paying in BDT." Numbers only from U5.
-- Why now, one line: "Models are cheap enough that a free tier is affordable." Fact: free_cost (status A).
-- If U5 is empty: drop the numbers and the "why now" figure, keep the three rings and labels.
-- Words: 20.
+### Slide 9. Team (paper) · D4 · needs U1
+- **Headline:** "Two builders, three products, one account."
+- **Layout:** two large founder cards (own photo, name in serif 48, role in mono, why-us line and printed LinkedIn path), then three product cards (MiniMe web workspace, M2C coding agent for terminal and editor, Menux personal automation agent); a strip with "Cap table: 100% founders." and "Seeking: product and pricing mentors." (or U6, U9).
+- **Budget:** 65.
 
-**11. Team** (Team)
-- Headline: "Two builders. One product."
-- Visual: two photos (U1, your own), name, role and one-line why-us each. A strip below: "Cap table: 100% founders." and advisors (U6) or "Seeking: product and pricing mentors."
-- Words: 25. Slide 11 cannot export without U1.
+### Slide 10. Traction and projection (paper) · D4
+- **Headline:** "Built before we sell, with targets we can test."
+- **Layout:** left, "What exists today": a mosaic of real shots (`blueprint`, `roles`, `build`) and numerals (11 tabs, 59 specialist agents, 3 products) with the "Pre-launch" pill; U7 and U8 only if supplied. Right, "Targets, unvalidated": bars for MRR at months 6, 12, 24 and 36 (facts.mrr) with paid users and registered builders under each month (facts.funnel); "Targets, not forecasts."
+- **Budget:** 75. **H4:** no user or revenue claim anywhere.
 
-**12. Traction, honest** (Traction)
-- Headline: "Built before we sell."
-- Visual: a mosaic of three small real shots (`chat`, `blueprint`, `build`) and a row of display numerals: "11" tabs, "59" agents, "3" products. Badge: "Pre-launch". QR to the live app (U3) if set, else the company website (U4), with the printed URL.
-- Add U7 and U8 items only if you supplied them.
-- Words: 16. Facts: tabs, agents, products.
-
-**13. Projection** (Projection, financial and impact)
-- Headline: "A small start, then compounding."
-- Visual: SVG bars for monthly revenue at month 6, 12, 36 ($307, $920, $44,700), with the month 24 value as a smaller bar ($8,235). Under each bar: paid users (40, 120, 2,720) and registered builders (1,200, 6,500, 95,000). Label in 30 px: "Targets, not forecasts."
-- Words: 14. Facts: mrr, funnel (status T). Do not show an exit slide: the repo has no exit plan.
-
-**14. Ask** (Ask)
-- Headline: "What we need now."
-- Visual, left: a stacked bar of the $3,628 pre-launch capital (Foundation $225, Pilot and launch prep $2,553, Launch $850). Right: "From the Sprint:" then three words, "Mentors. Pilot users. Pricing feedback." (U12 if you changed them). Bottom line: "Plan A self-funds after about $4.2k. Grant / seed-fund pilot planned for Apr 2027."
-- Words: 22. Facts: capital, external, timeline.
-- Note: the Sprint is free and takes no equity. This is not a funding ask to INSEAD. The capital is the cost of getting to launch.
-
-**15. Impact and close, the story ends** (Impact)
-- Headline: "Idea in. Build plan out."
-- Visual: a three-step strip of real shots from the same plant-monitor project: the prompt (`prd`), the architecture (`arch`), the 3D blueprint (`blueprint`). Below: QR code with printed URL for the company website (U4), plus the live app (if U3), plus the contact email (U2) and founder LinkedIns (U1).
-- Goal line (target, not achieved): "Goal: 1,200 builders in 6 months."
-- Words: 20. Do not claim impact that has not happened.
+### Slide 11. Ask and close (ink) · D4
+- **Headline:** "Idea in, build plan out. Help us reach launch."
+- **Layout:** left, "From the Sprint:" mentors, pilot users, pricing feedback (U12); the pre-launch capital as a stacked bar (facts.capital: Foundation, Pilot and launch prep, Launch) with "Plan A self-funds after about $4.2k. Grant / seed-fund pilot planned for Apr 2027."; middle, the closing story: three small shots (`prd`, `arch`, `blueprint`) joined by arrows; the goal line "Goal: 1,200 builders in 6 months."; right, QR tile with the printed website URL, LinkedIn paths, email if U2.
+- **Budget:** 85. **Say:** "The Sprint is free and takes no equity. This is not a funding ask to INSEAD. The capital is the cost of getting to launch."
 
 ---
 
 ## 7. Code conventions
 
-Carry over everything in `docs/PATCH_NOTES.md` (frame math, `STAGE`, no `Math.random`, no `Date`, no network at render, colours from `theme.ts`). Deck-specific:
-
-```
-src/deck/theme.ts        deck tokens and sizes from section 4
-src/deck/Txt.tsx         typography components (size presets only)
-src/deck/kit.tsx         Slide shell, Footer, Pin, Numeral, Badge
-src/deck/Shot.tsx        framed, cropped screenshot (+ grid overlay)
-src/deck/shots.ts        id -> file, natural size, crop box (section 5)
-src/deck/Qr.tsx          QR drawn as SVG rects from the `qrcode` package
-src/deck/facts.ts        every number, with source and status (section 3)
-src/deck/words.ts        every string, per slide, plus speaker notes
-src/deck/data/inputs.ts  the open items U1..U12 (section 2)
-src/deck/slides/S01.tsx .. S15.tsx
-src/deck/Deck.tsx        picks the slide for the current frame (BUILT map)
-scripts/make-deck.mjs    renders out/deck/NN.jpg and out/deck/MiniMe-deck.pdf
-scripts/check-deck.mjs   the checks in section 10
-```
-
-- **Slide N is frame N-1.** `Deck.tsx` has a `BUILT` map. An unbuilt slide shows a `Pending` frame in the Studio and is skipped by the export, so it never reaches the PDF.
-- **Numbers** are read from `facts.ts`, **text** from `words.ts`. Slides never contain a typed number or sentence.
-- **Pins** use `mapPoint(appPoint, shot)` from `Shot.tsx`, so they follow the picture if it is re-cropped.
-- **A slide that needs an open item** (section 2) and does not have it is skipped by the export with a line naming the item, the same way the MiniLocker script skipped slide 9 without its screenshot.
-- `package.json` scripts: `"deck": "node scripts/make-deck.mjs"`, `"deck:check": "node scripts/check-deck.mjs"`. New dependencies: `@remotion/bundler`, `@remotion/renderer` (same version as `remotion`, 4.0.539), `pdf-lib`, `qrcode`. Pin exact versions.
-- Register the composition in `src/Root.tsx` next to the film: `<Composition id="MiniMeDeck" component={Deck} durationInFrames={15} fps={30} width={1920} height={1080} />`. Leave the two film compositions untouched.
+- Everything lives in `src/deck/`. One slide per file in `src/deck/slides/SNN.tsx`, registered in the `BUILT` block of `Deck.tsx` (one `N: SNN,` per line between the marker comments).
+- Text comes from `words.ts` (`text(n)`), numbers from `facts.ts` (`facts.x.value...`, or a `{fact.path}` token inside `words.ts`), people and links from `data/inputs.ts`, crops from `shots.ts`. No sentence and no number is typed in a slide file.
+- `Slide` sets the theme (`paper` or `ink`), the ground, the section tag and the footer. `Txt` follows the theme. `Shot`, `Pin`, `Card`, `Stat`, `Pill`, `Qr` and `QrBlock` are the building blocks; add new ones to `kit.tsx`.
+- Pins go in the blank area beside the thing they mark, placed with `mapPoint()` so they follow the crop.
+- Data modules (`rules.ts`, `facts.ts`, `words.ts`, `shots.ts`, `data/inputs.ts`) stay React-free and import only each other, because the scripts load them in plain Node.
 
 ---
 
 ## 8. Patch plan
 
-| Patch | Slides | New code | Needs from you | Status |
+| Patch | Slides | What it adds | Needs from you | Status |
 |---|---|---|---|---|
-| D0 | none (scaffold) | theme, `Txt`, kit, `Shot`, `shots.ts`, `Qr`, `facts.ts`, `words.ts`, `inputs.ts`, `Deck.tsx` with all 15 pending, `make-deck.mjs`, `check-deck.mjs`, composition | Nothing. Fill section 2 any time | **Done** |
-| D1 | 1 cover, 2 problem | `Qr` proof, hero text layout | None (U4 is set; U3 stays empty until MiniMe is deployed) | |
-| D2 | 3, 4, 5, 6, 7 | multi-shot layouts, `Pin` routing slide, numerals | Optional re-capture (5.3) | |
-| D3 | 8, 9, 10 | pricing columns, positioning map, ring diagram | U5, U11 (optional) | |
-| D4 | 11, 12, 13 | team layout, traction mosaic, bar chart | **U1 (required)**, U6 to U8 | |
-| D5 | 14, 15, then QA and export | stacked bar, closing strip, PDF size guard, link annotations | U2, U10, U12 | |
+| D0 | none | scaffold, scripts, composition | nothing | **Done** |
+| D1 | 1 cover, 2 problem | **v2 reset:** new design system (paper and ink, Newsreader and JetBrains Mono), 11-slide plan, this guide, rules and word budgets, slides 1 and 2 | nothing | **Done** |
+| D2 | 3, 4, 5 (solution) | landing and nav annotation, idea-to-plan grid, build-test-grow columns | optional re-capture (5.3) | |
+| D3 | 6, 7, 8 (process, business, competition and market) | routing graph with pins, plan cards and gross-profit bars, positioning map and rings | U13, U5, U11 (all optional) | |
+| D4 | 9, 10, 11 (team, traction and projection, ask and close) | founder cards, MRR bars, capital bar, closing QR | U1 why-us lines, U2, U6 to U10, U12 | |
+| D5 | none | export polish, speaker notes check, final QA, PDF size | nothing | |
 
 ---
 
 ## 9. Patch prompts (paste into Claude Code or Copilot in the repo)
 
-Start every prompt with: "Read `docs/PATCH_NOTES.md` and `docs/guide/PITCH_DECK_PATCHES.md` first. Follow both. Append an entry to `docs/PATCH_NOTES.md` when done."
+Common preamble for every prompt: "Read `docs/PATCH_NOTES.md` and `docs/guide/PITCH_DECK_PATCHES.md` (v2) first. Follow sections 1, 4, 6 and 7. Do not touch the film compositions. Slide files contain no typed sentence and no typed number. Keep every text at 22 px or larger (use `Txt`). Real screenshots only. Run `npx tsc --noEmit`, `npm run deck:check` and `npm run deck`, look at every rendered still, and fix anything that overlaps, is cut off or hides screenshot text. Append a PATCH_NOTES entry and update section 8. Report the PDF size and the word counts."
 
-### D0 prompt: scaffold
+### D2 prompt: slides 3 to 5
+Build slides 3, 4 and 5 per section 6. Add the crops they need to `CROPS` in `shots.ts` (nav strip of `chat_nav`, the persona list of `test`, and so on) and measure them with `<Shot grid />`. Add each slide to `BUILT`.
 
-> Create the deck scaffold described in sections 4, 5, 7 and 3 of the guide. Add `src/deck/theme.ts` (tokens from section 4, importing colours from `src/config/theme.ts`), `Txt.tsx` (sizes `display`, `headline`, `sub`, `body` only; no free font size; body is 32 px), `kit.tsx` (Slide shell on a 1728x920 content box at (96,72), Footer with the logo and "n / 15", Pin, Numeral, Badge), `Shot.tsx` (framed screenshot using `staticFile` with `encodeURI` for filenames that contain spaces; props `id`, `width`, optional `crop` override, optional `grid`; applies the crop from `shots.ts` with CSS only; exposes `mapPoint`), `shots.ts` (the catalogue in 5.2 with the base crop `{x:0,y:116,w:1838,h:964}` for the 1920x1080 captures; set the natural sizes by reading the files), `Qr.tsx` (use `qrcode` `QRCode.create(text).modules`, draw white tile plus dark modules as SVG rects, 4-module quiet zone, error correction M), `facts.ts` (every row of section 3 as `{id, value, source, status}` with typed accessors; a missing id throws), `words.ts` (per slide: headline, lines, notes; export a `wordCount(slide)` helper), `data/inputs.ts` (U1..U12, all `null`). Add `Deck.tsx` with a `BUILT` map (empty) and a `Pending` frame, and register `MiniMeDeck` (15 frames, 1920x1080, 30 fps) in `Root.tsx`. Write `scripts/make-deck.mjs` modelled on `minilocker-film/scripts/make-deck.mjs` but: render JPEG stills (`imageFormat: "jpeg"`, `jpegQuality: 90`), embed with `pdf.embedJpg`, step quality 90 to 82 to 75 until the PDF is 9.0 MB or less, print the size, skip unbuilt slides and slides whose open item (section 2) is missing, support `--only=3,5`, `--scale=2`, `--png`. Write `scripts/check-deck.mjs` with the checks in section 10. Add the two npm scripts. Do not build any slide yet. Show a screenshot-grid still of `chat_nav` and `chat` proving the base crop removes the taskbar and browser bar.
+### D3 prompt: slides 6 to 8
+Build slides 6, 7 and 8 per section 6. Slide 7 needs a small bar chart built from `facts.gp` (draw it with divs or SVG, no chart library). Slide 8 draws the map and rings as SVG. Honour U5, U11 and U13 when they are set; otherwise use the defaults.
 
-### D1 prompt: slides 1 and 2
+### D4 prompt: slides 9 to 11
+Build slides 9, 10 and 11 per section 6. Slide 9 is skipped by the export while U1 is incomplete. Use `inputs.founders` (photo from `public/deck/people/`), `inputs.split`, `inputs.advisors`. Slide 11 is on ink and closes the story of slide 2.
 
-> Build slides 1 and 2 per section 6. Slide 1: `splash` as the ground (crop to the logo, darken to 35 percent), wordmark, the headline and sub from `words.ts`, a 280 px QR with its printed URL (use `inputs.liveUrl ?? inputs.companyUrl`), and the small company line. Slide 2: the drone prompt bubble from `chat` cropped and enlarged as the whole slide, "Then what?" in accent under it. No bullets, 14 words at most. Add both to `BUILT`. Run `npm run deck:check` and `npm run deck`. Report the PDF size and the word counts.
-
-### D2 prompt: slides 3 to 7
-
-> Build slides 3 to 7 per section 6. Use the shot ids from section 5.2 and tune crops in the Studio grid so no sidebar with throwaway project names is visible unless I have re-captured. Slide 6 numerals come from `facts.agents`. Slide 7 uses `mapPoint` pins 1 to 4 on the routing-graph crop; place the pins by reading coordinates off the grid. Slide 5's `test` shot must use only the left persona list (the right-hand table shows raw `<br>` text). Keep every slide at or under its word budget and above 30 px text. Add to `BUILT`, run check and deck.
-
-### D3 prompt: slides 8 to 10
-
-> Build slides 8, 9 and 10 per section 6. Slide 8: four columns from `facts.plans`, with the label "Launch plan, not live yet." in 30 px. Slide 9: an SVG two-axis map with category dots only, corner label "Our view", the two lines under it from `words.ts`; if `inputs.competitors` (U11) is set, label the dots with those names. Slide 10: three-ring SVG; if `inputs.market` (U5) is null, omit every number and the "why now" figure, otherwise show each number with its source in 30 px. Add to `BUILT`.
-
-### D4 prompt: slides 11 to 13
-
-> Build slides 11, 12 and 13 per section 6. Slide 11 requires `inputs.founders` (U1); if it is null the slide must be skipped by the export with a message. Use the founders' own photos from `public/deck/people/` (I will add them), circular crop, 280 px. Show "Cap table: 100% founders" unless `inputs.split` (U9) is set. Slide 12: mosaic of three small shots, numerals "11", "59", "3" from `facts`, a "Pre-launch" badge, QR as on slide 1; add U7 and U8 items only if present. Slide 13: SVG bars from `facts.mrr` at month 6, 12, 36 plus a smaller month-24 bar, paid users and registered users under each bar from `facts.funnel`, the label "Targets, not forecasts." in 30 px. No exit slide.
-
-### D5 prompt: slides 14, 15 and export
-
-> Build slides 14 and 15 per section 6. Slide 14: stacked bar of `facts.capital` parts (225, 2,553, 850) with a total of $3,628, the three "From the Sprint" words from `inputs.sprintAsk ?? defaults`, the bottom line from `words.ts`. Slide 15: three-step strip of `prd`, `arch`, `blueprint`; a QR code for the company website (`inputs.companyUrl`) and, if set, the live app; contact email and founder LinkedIns from `inputs`; the goal line labelled as a goal. Then finish the export: add pdf-lib link annotations over each QR and printed URL (a `LINKS` map of slide, rect, url) so the links are also clickable in a PDF viewer, keep the flat JPEG pages. Run `npm run deck:check` and `npm run deck`, then fix anything that fails. Output the final PDF size, page count, and the word count per slide.
+### D5 prompt: export and QA
+Run the full export, check that the PDF is at most 9.0 MB, that every page is 1920 x 1080 and that all QR codes decode to the intended URLs. Re-read `words.ts` against the honesty rules H1 to H8. Fill the speaker notes that are still empty with one true line each, no invented claims.
 
 ---
 
 ## 10. Checks (`npm run deck:check`) and final QA
 
-The script fails (non-zero exit) on any of these:
+The script fails on: more or fewer than `TOTAL_SLIDES` slides, a built slide missing from the composition, any `fontSize` literal under 22 inside `src/deck/`, a slide over its word budget, a headline over 12 words, a banned word (H6), a typed number in `words.ts` or a slide, "73 agents", a facts row without a source or status, a reference to the Token Usage capture or the film's stat chip, a null open item that a built slide reads without declaring it, a screenshot whose natural size or crop does not match the file, a missing founder photo, unpinned new dependencies, and (after `npm run deck`) a PDF larger than 9.0 MB, with the wrong page count or with pages that are not 1920 x 1080.
 
-- More than 15 slides, or a built slide missing from the composition.
-- Any `fontSize` literal below 30 inside `src/deck/` outside `Shot.tsx`.
-- Any slide over its word budget from section 6, or a headline over 8 words.
-- Any number rendered by a slide that is not read from `facts.ts` (grep for digits in `slides/*.tsx` outside imports and layout constants).
-- Any `facts.ts` row without a `source` or a `status`.
-- A banned word (rule H6) anywhere in `words.ts`.
-- Any built slide that references `tokens` (`image copy 14.png`) or the promo film's stat chip.
-- A `null` open item used by a built slide (the slide must be skipped, never rendered with a hole).
-- After `npm run deck`: PDF larger than 9.0 MB, page count not equal to the built count, page size not 1920 x 1080.
-
-Final human QA, in this order:
-
-- [ ] Open the PDF at 100 percent and page through it once without reading: can you say what each slide is about in two seconds?
-- [ ] Slide 2 is a picture and one line, not a paragraph.
-- [ ] Every number matches `facts.ts` and is labelled target or plan where it is one.
-- [ ] No "73 agents" anywhere, and the form's elevator pitch and product description say 59 too.
-- [ ] No sidebar with throwaway project names, no personal name in the top bar unless you want it there, no API key names.
-- [ ] Scan each QR with a phone, off the screen and off a printout.
-- [ ] Both founders have read every slide and can answer a question about any number on it.
-- [ ] Upload the PDF to the form and wait for the success message (the form already failed once on submit; if it fails again use the HubSpot direct form, or email aiventurelab@insead.edu).
+Final QA by a human, 15 minutes:
+1. Open the PDF full screen. Every slide: can you tell what it says in five seconds?
+2. Scan each QR with a phone.
+3. Read every number against `facts.ts` and its status.
+4. Check the application form text against section 1.3 (59 agents, not 73).
+5. Ask a friend who has not seen the product to explain it back after slide 6.

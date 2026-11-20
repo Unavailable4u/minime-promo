@@ -1,7 +1,8 @@
 import React from 'react';
 import {Img, staticFile} from 'remotion';
 import {SHOTS, shotFile, type Crop, type ShotId} from './shots';
-import {FRAME} from './theme';
+import {FRAME, SURFACES} from './theme';
+import {useDeckTheme} from './Txt';
 
 /**
  * A framed, cropped screenshot. The crop is applied with CSS only (the file is never edited): the image is positioned
@@ -23,7 +24,7 @@ export type ShotRef = {
 
 export type ShotProps = ShotRef & {
   grid?: boolean;
-  /** Draw the frame (1 px border, radius, shadow). Default true. */
+  /** Draw the frame (hairline, radius, soft shadow; colours follow the slide theme). Default true. */
   frame?: boolean;
   style?: React.CSSProperties;
   children?: React.ReactNode;
@@ -98,6 +99,7 @@ const GridOverlay: React.FC<{layout: ShotLayout}> = ({layout}) => {
 
 export const Shot: React.FC<ShotProps> = ({id, width, crop, maxScale, grid = false, frame = true, style, children}) => {
   const layout = shotLayout({id, width, crop, maxScale});
+  const surface = SURFACES[useDeckTheme()];
   const {natural} = SHOTS[id];
   const radius = frame ? FRAME.radius : 0;
   return (
@@ -108,7 +110,7 @@ export const Shot: React.FC<ShotProps> = ({id, width, crop, maxScale, grid = fal
         height: layout.height,
         overflow: 'hidden',
         borderRadius: radius,
-        boxShadow: frame ? FRAME.shadow : undefined,
+        boxShadow: frame ? surface.shadow : undefined,
         flexShrink: 0,
         ...style,
       }}
@@ -133,7 +135,7 @@ export const Shot: React.FC<ShotProps> = ({id, width, crop, maxScale, grid = fal
             position: 'absolute',
             inset: 0,
             borderRadius: radius,
-            border: `1px solid ${FRAME.borderColor}`,
+            border: `1px solid ${surface.line}`,
             pointerEvents: 'none',
           }}
         />

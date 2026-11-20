@@ -5,11 +5,11 @@
  * directly in these strings.
  *
  * Fields per slide:
- *   headline  8 words or fewer (R9), Sora 76 px, two lines at most
+ *   headline  12 words or fewer (R9 v2), serif 80 px, two lines at most
  *   lines     running text (sub line, captions, one-liners)
  *   labels    short labels that belong to the visual and are part of the slide's word budget
- *   graphic   names inside a diagram or chart (axes, ring names, plan names, stage names, units). NOT counted in the
- *             budget (the guide's own counts leave them out) but still drawn at 30 px or larger.
+ *   graphic   section tags (drawn as "§ NN · tag") and names inside a diagram or chart (axes, ring names, plan names,
+ *             units). NOT counted in the budget but still drawn at 22 px or larger.
  *   notes     the line the founder says aloud. Never drawn on the slide.
  *
  * Counting rules (wordCount): a word is a whitespace-separated token with a letter in it; numerals ("59", "$4.2k",
@@ -27,80 +27,96 @@ export type SlideWords = {
 };
 
 export const WORDS: Readonly<Record<number, SlideWords>> = {
-  // 1. Cover (opening). Wordmark and the printed URL are brand marks, not counted.
+  // 1. Cover (ink). The wordmark, the printed URL and the founders' names are not counted.
   1: {
     headline: 'From a rough idea to a finished build.',
-    lines: ['One AI workspace, start to finish.', '{company.name}. Two founders. {company.city}, {company.country}.'],
-    labels: [],
+    lines: ['One AI workspace, start to finish.'],
+    labels: ['{company.name} · {company.stage} · {company.city}, {company.country}', 'workspace tabs', 'specialist agents', 'agent roles', 'routing tiers', 'Pre-launch', 'Scan to visit'],
     graphic: [],
     notes: 'We are building the AI that does not forget your project halfway through.',
   },
-  // 2. Problem, the story (Secret Sauce 1). The drone prompt bubble is a screenshot.
+  // 2. Problem, the story. Section tags are drawn by kit.tsx as "§ NN · tag".
   2: {
     headline: 'A chat answers once. A project takes months.',
-    lines: ['Then what?'],
-    labels: [],
-    graphic: [],
+    lines: ['A real prompt from our own product. The answer is good. The project is not done.', 'Each step needs the context again.'],
+    labels: [
+      'Real prompt',
+      'Real answer',
+      'What the project still needs',
+      'Research the parts and prior art',
+      'Plan the architecture and the parts list',
+      'Build the code',
+      'Test it with real users',
+      'Launch it and grow',
+      'Then what?',
+    ],
+    graphic: ['The problem'],
     notes:
       'This is a real prompt from our own product. The answer is good. The project is not done. Research, plan, build, test, launch: each needs the context again.',
   },
-  // 3. Solution, the promise (solution 1 of 4). The seven stage names are in the nav screenshot.
+  // 3. Solution, the promise. The seven stage names come from facts.stages (marked on the nav strip).
   3: {
     headline: 'One AI carries it start to finish.',
-    lines: ['{tabs.count} tabs. One workspace.'],
-    labels: [],
-    graphic: [],
+    lines: ['{tabs.count} tabs. {stages.count} lifecycle stages. One workspace.', 'Same project, same workspace, every stage.'],
+    labels: [
+      'Chat: describe the idea in plain words',
+      'Notebooks: mind maps and quizzes',
+      'Research and Plan: understand it, design it',
+      'Build, Test and Growth: make it, ship it',
+    ],
+    graphic: ['The solution'],
     notes: '',
   },
-  // 4. Solution, understand and plan (solution 2 of 4)
+  // 4. Product, idea to plan (one real project, three real screens plus research)
   4: {
-    headline: 'Understand it. Plan it.',
-    lines: [],
-    labels: ['Research', 'Plan'],
-    graphic: [],
+    headline: 'One prompt becomes a PRD, an architecture and a 3D blueprint.',
+    lines: ['One real project: a battery-powered plant soil-moisture monitor.'],
+    labels: ['The prompt and the generated PRD', 'The architecture diagram', 'The 3D blueprint and parts list', 'Research sources, searchable'],
+    graphic: ['Idea to plan'],
     notes: '',
   },
-  // 5. Solution, build, test, grow (solution 3 of 4)
+  // 5. Product, build test grow. Do not imply the Build shot is the plant monitor (it is a small snippet).
   5: {
-    headline: 'Build it. Test it. Grow it.',
-    lines: [],
-    labels: ['Build', 'Test', 'Growth'],
-    graphic: [],
+    headline: 'Then build it, test it with personas, and grow it.',
+    lines: ['A code editor, simulated customers and content fan-out sit in the same workspace.'],
+    labels: ['Build: a code editor', 'Test: simulated customer personas', 'Growth: one post, many platforms'],
+    graphic: ['Build, test, grow'],
     notes: '',
   },
-  // 6. Solution, the team inside (solution 4 of 4). Tier names come from facts.routing.
+  // 6. Process, how one task flows. Tier names come from facts.routing; tier notes from inputs.tierNotes (U13) when set.
   6: {
-    headline: 'A whole team, routed by effort.',
-    lines: [],
-    labels: ['agents', 'roles'],
-    graphic: [],
-    notes: '',
-  },
-  // 7. Process, how one task flows. Pin numbers are numerals.
-  7: {
-    headline: 'Ask. Route. Work. Remember.',
-    lines: [],
-    labels: ['Ask', 'Route: tier chosen', 'Specialists work and recheck', 'Saved to the workspace'],
-    graphic: [],
+    headline: 'We route by effort, so hard tasks get a team.',
+    lines: ['Simple questions stay instant and cheap. Hard ones get specialists that work and recheck.'],
+    labels: ['Ask', 'Route: the tier is chosen', 'Specialists work and recheck', 'Saved to the workspace', 'specialist agents', 'roles in the Role Library', 'Live routing graph from a real task'],
+    graphic: ['How it works', 'Tier'],
     notes: 'We route by effort so simple questions stay instant and cheap, and hard ones get a team.',
   },
-  // 8. Business model and pricing. Plan names and prices come from facts.plans.
-  8: {
-    headline: 'Free to start. Four plans.',
-    lines: ['Local BDT pricing.', 'Launch plan, not live yet.'],
+  // 7. Business model and pricing. Plan names and prices come from facts.plans. Everything here is status A: say "plan".
+  7: {
+    headline: 'Free to start, four plans, priced in BDT.',
+    lines: [
+      'Launch plan, not live yet. Figures are assumptions, not results.',
+      'Plan: about {margin.typicalGrossMarginPct}% gross margin on paid plans.',
+      'Plan: about {breakeven.basicUsers} Basic users cover lean infrastructure and the free tier.',
+      'A free user costs about ${free_cost.usdPerActiveFreeUserPerMonth} a month.',
+      'Annual costs {plans.annualMonths} times monthly.',
+      'Free plan: {plans.freeTokensPerMonth} tokens a month.',
+    ],
     labels: [],
-    graphic: ['per month'],
+    graphic: ['Business model', 'per month'],
     notes: '',
   },
-  // 9. Competition, secret sauce and AI-proof (the headline answers the AI-proof question without the banned phrase)
-  9: {
-    headline: 'Not another chat box.',
+  // 8. Competition, why now, market. Axis names, categories and ring names are graphic.
+  8: {
+    headline: 'Not another chat box: a workspace that carries the project.',
     lines: [
       'Secret sauce: memory + routing + the full lifecycle.',
       'Models improve. We route to them. The workspace is the product.',
+      'Models are cheap enough that a free tier is affordable.',
     ],
     labels: ['MiniMe', 'Our view.'],
     graphic: [
+      'Why us, why now',
       'one answer',
       'whole project',
       'forgets',
@@ -109,61 +125,41 @@ export const WORDS: Readonly<Record<number, SlideWords>> = {
       'code agents',
       'app builders',
       'note and research tools',
+      'Student and indie builders, paying in BDT.',
+      'South Asia',
+      'World',
     ],
     notes:
       'Honest note for the founders: the moat is early. The defensible part is the persistent workspace and routing, not any one model.',
   },
-  // 10. Scalability, market and why now
-  10: {
-    headline: 'Start in Bangladesh. Then everywhere.',
-    lines: ['Models are cheap enough that a free tier is affordable.'],
-    labels: [],
-    graphic: ['Student and indie builders, paying in BDT.', 'South Asia', 'World'],
-    notes: '',
-  },
-  // 11. Team. Names, roles, why-us lines and links come from data/inputs.ts (U1).
-  11: {
-    headline: 'Two builders. One product.',
+  // 9. Team. Names, roles, why-us lines, LinkedIn and photos come from data/inputs.ts (U1). Product names come from facts.products.
+  9: {
+    headline: 'Two builders, three products, one account.',
     lines: ['Cap table: {cap_table.foundersPct}% founders.', 'Seeking: product and pricing mentors.'],
     labels: [],
-    graphic: [],
+    graphic: ['The team'],
     notes: '',
   },
-  // 12. Traction, honest
-  12: {
-    headline: 'Built before we sell.',
-    lines: [],
-    labels: ['Pre-launch', 'tabs', 'agents', 'products'],
-    graphic: [],
+  // 10. Traction (honest) and projection (targets)
+  10: {
+    headline: 'Built before we sell, with targets we can test.',
+    lines: ['Pre-launch: nothing here is a user count.', 'Targets, not forecasts.'],
+    labels: ['What exists today', 'tabs', 'specialist agents', 'products', 'Targets, unvalidated', 'paid users', 'registered builders'],
+    graphic: ['Where we are, where we aim', 'Month'],
     notes: '',
   },
-  // 13. Projection
-  13: {
-    headline: 'A small start, then compounding.',
-    lines: ['Targets, not forecasts.'],
-    labels: ['paid users', 'registered builders'],
-    graphic: ['Month'],
-    notes: '',
-  },
-  // 14. Ask
-  14: {
-    headline: 'What we need now.',
+  // 11. Ask and close (ink): the story ends where it began.
+  11: {
+    headline: 'Idea in, build plan out. Help us reach launch.',
     lines: [
       'From the Sprint:',
       'Mentors. Pilot users. Pricing feedback.',
       'Plan A self-funds after about ${external.planAUsd:k}. Grant / seed-fund pilot planned for {timeline.grantApplication}.',
+      'Goal: {funnel.registered.0} builders in {funnel.months.0} months.',
     ],
-    labels: [],
-    graphic: ['Pre-launch capital'],
+    labels: ['Scan to visit'],
+    graphic: ['The ask', 'Pre-launch capital'],
     notes: 'The Sprint is free and takes no equity. This is not a funding ask to INSEAD. The capital is the cost of getting to launch.',
-  },
-  // 15. Impact and close, the story ends
-  15: {
-    headline: 'Idea in. Build plan out.',
-    lines: ['Goal: {funnel.registered.0} builders in {funnel.months.0} months.'],
-    labels: ['Prompt', 'Architecture', 'Blueprint'],
-    graphic: [],
-    notes: '',
   },
 };
 

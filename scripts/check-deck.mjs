@@ -111,7 +111,8 @@ for (let n = 1; n <= rules.TOTAL_SLIDES; n += 1) {
   const raw = words.WORDS[n];
   for (const s of [raw.headline, ...raw.lines, ...raw.labels, ...raw.graphic, raw.notes]) {
     const noTokens = s.replace(/\{[^}]*\}/g, '');
-    if (/\d/.test(noTokens)) {
+    // a standalone number: "1,200", "Month 6", "$4.2k". Product words such as "3D" are not numbers.
+    if (/(?<![A-Za-z_-])\d[\d.,]*[kKmM%]?(?![A-Za-z0-9_])/.test(noTokens)) {
       bad(`words.ts slide ${n}: a number is typed in "${s}". Use a {fact.path} token so it comes from facts.ts (H1, H2).`);
     }
   }
@@ -183,7 +184,7 @@ for (const file of slideFiles) {
   }
   for (const m of code.matchAll(/(['"`])((?:\\.|(?!\1).)*)\1/g)) {
     // a standalone number inside a string: "1,200", "Month 6", "$4.2k". Not ids or css such as "h1", "S01", "1px solid".
-    if (/(?<![A-Za-z_-])\d[\d.,]*[kKmM%]?(?![A-Za-z0-9_])/.test(m[2]) && !/^[\w./ -]+\.(png|jpg|webp)$/.test(m[2]) && !/^(#|rgba?\()/.test(m[2])) {
+    if (/(?<![A-Za-z_-])\d[\d.,]*[kKmM%]?(?![A-Za-z0-9_])/.test(m[2]) && !/^[\w./ -]+\.(png|jpg|webp)$/.test(m[2]) && !/^(#|rgba?\(|(radial|linear|conic)-gradient\(|(translate|scale|rotate|calc|blur|brightness)\w*\()/.test(m[2])) {
       bad(`${rel(file)}: a string with a number ("${m[2].slice(0, 40)}"). Numbers come from facts.ts, text from words.ts.`);
     }
   }

@@ -1,10 +1,10 @@
 import React from 'react';
 import {AbsoluteFill} from 'remotion';
-import {FontsReady} from '../lib/fonts';
+import {DeckFonts} from './deckFonts';
 import {Shot, shotLayout} from './Shot';
 import {SHOTS, type ShotId} from './shots';
-import {COLORS} from './theme';
-import {Txt} from './Txt';
+import {PALETTE} from './theme';
+import {ThemeContext, Txt} from './Txt';
 
 /**
  * DEV-ONLY (not part of the deck, never exported): proof that the base crop removes the browser bar and the taskbar.
@@ -22,7 +22,7 @@ const Row: React.FC<{id: ShotId}> = ({id}) => {
   return (
     <div style={{display: 'flex', gap: 32, alignItems: 'flex-start'}}>
       <div style={{display: 'flex', flexDirection: 'column', gap: 10}}>
-        <Txt size="body" tone="secondary">
+        <Txt size="caption" tone="secondary">
           {id}: whole file {def.natural.w} x {def.natural.h}, crop outlined
         </Txt>
         <Shot id={id} width={SOURCE_W} crop={{x: 0, y: 0, w: def.natural.w, h: def.natural.h}} grid frame={false}>
@@ -33,14 +33,14 @@ const Row: React.FC<{id: ShotId}> = ({id}) => {
               top: crop.y * layout.scale,
               width: crop.w * layout.scale,
               height: crop.h * layout.scale,
-              outline: `4px solid ${COLORS.accent}`,
+              outline: `4px solid ${PALETTE.accentOnInk}`,
               outlineOffset: -2,
             }}
           />
         </Shot>
       </div>
       <div style={{display: 'flex', flexDirection: 'column', gap: 10}}>
-        <Txt size="body" tone="secondary">
+        <Txt size="caption" tone="secondary">
           after the crop {JSON.stringify(crop)}
         </Txt>
         <Shot id={id} width={CROPPED_W} grid />
@@ -50,10 +50,12 @@ const Row: React.FC<{id: ShotId}> = ({id}) => {
 };
 
 export const DevCrop: React.FC = () => (
-  <FontsReady>
-    <AbsoluteFill style={{backgroundColor: COLORS.ground, padding: 40, display: 'flex', flexDirection: 'column', gap: 28}}>
+  <DeckFonts>
+    <ThemeContext.Provider value="ink">
+    <AbsoluteFill style={{backgroundColor: PALETTE.night, padding: 40, display: 'flex', flexDirection: 'column', gap: 28}}>
       <Row id="chat_nav" />
       <Row id="chat" />
     </AbsoluteFill>
-  </FontsReady>
+    </ThemeContext.Provider>
+  </DeckFonts>
 );

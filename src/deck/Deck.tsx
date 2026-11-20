@@ -1,15 +1,17 @@
 import React from 'react';
 import {AbsoluteFill, useCurrentFrame} from 'remotion';
-import {FontsReady} from '../lib/fonts';
-import {Footer} from './kit';
+import {DeckFonts} from './deckFonts';
+import {DECK_FOOTER, Footer} from './kit';
 import {missingNeeds, SLIDE_NEEDS} from './rules';
 import {inputs} from './data/inputs';
 import {text} from './words';
 import {Txt} from './Txt';
-import {COLORS, CONTENT, TOTAL_SLIDES} from './theme';
+import {CONTENT, SURFACES, TOTAL_SLIDES} from './theme';
+import {S01} from './slides/S01';
+import {S02} from './slides/S02';
 
 /**
- * The deck is ONE composition, `MiniMeDeck`: 15 frames, slide N is frame N-1 (guide section 7).
+ * The deck is ONE composition, `MiniMeDeck`: 15 frames, slide N is frame N-1 (guide v2, section 7).
  *
  * BUILT maps a slide number to its component (src/deck/slides/SNN.tsx). Patches D1 to D5 add one line per slide between
  * the two marker comments, e.g. `1: S01,` (keep exactly one entry per line: scripts/lib/deck-data.mjs reads this block).
@@ -17,6 +19,8 @@ import {COLORS, CONTENT, TOTAL_SLIDES} from './theme';
  */
 export const BUILT: Readonly<Record<number, React.FC>> = {
   // BUILT:START
+  1: S01,
+  2: S02,
   // BUILT:END
 };
 
@@ -25,7 +29,7 @@ const Pending: React.FC<{n: number}> = ({n}) => {
   const words = text(n);
   const blocked = missingNeeds(n, inputs);
   return (
-    <AbsoluteFill style={{backgroundColor: COLORS.ground}}>
+    <AbsoluteFill style={{backgroundColor: SURFACES.paper.ground}}>
       <div
         style={{
           position: 'absolute',
@@ -39,7 +43,7 @@ const Pending: React.FC<{n: number}> = ({n}) => {
           gap: 32,
         }}
       >
-        <Txt size="sub" tone="muted">
+        <Txt size="label" tone="muted">
           Slide {n} of {TOTAL_SLIDES}: pending
         </Txt>
         <Txt size="headline" tone="secondary">
@@ -55,7 +59,7 @@ const Pending: React.FC<{n: number}> = ({n}) => {
           </Txt>
         ) : null}
       </div>
-      <Footer n={n} />
+      <Footer n={n} theme="paper" label={DECK_FOOTER} />
     </AbsoluteFill>
   );
 };
@@ -63,5 +67,5 @@ const Pending: React.FC<{n: number}> = ({n}) => {
 export const Deck: React.FC = () => {
   const slide = useCurrentFrame() + 1;
   const Built = BUILT[slide];
-  return <FontsReady>{Built ? <Built /> : <Pending n={slide} />}</FontsReady>;
+  return <DeckFonts>{Built ? <Built /> : <Pending n={slide} />}</DeckFonts>;
 };

@@ -1270,3 +1270,26 @@ CHANGED  docs/guide/PITCH_DECK_PATCHES.md   (U3/U4 and QR targets, D0 status), d
 - `npx tsc --noEmit`, `npm run deck:check` pass on the empty scaffold; `npm run deck` exits 0 with the "nothing to export" notice.
 - With a TEMPORARY test slide (not shipped): full bundle -> still -> PDF in 15 s, 1 page 1920x1080, 175 KB, fonts/screenshot (name with spaces)/Pin/Numeral/Badge/footer rendered; the QR decoded (OpenCV) to `https://www.wearenext.tech/`; the check failed correctly on fontSize 24, a typed number, a banned word and "73 agents"; slide 11 was skipped with "missing U1 founders" when `founders` was null.
 - NOT run: a full 15-slide export, the Studio by eye, `--scale=2`, `--png`, the 82/75 quality steps (nothing was over 9 MB).
+
+---
+
+## PATCH D1 (v2) — Plan reset, new design system, slides 1 and 2
+
+Replaces the first D1 (never merged). Built on top of D0. Why: the first D1 slides were too bare and too tied to the MiniMe dark crimson look; the founders asked for denser, more informative slides inspired by the MiniLocker deck and five reference templates, and for fewer than 12 slides.
+
+### What changed
+- **Plan (guide v2, `docs/guide/PITCH_DECK_PATCHES.md`, fully rewritten):** **11 slides** (was 15). New slide list: 1 cover, 2 problem, 3 promise, 4 idea to plan, 5 build/test/grow, 6 how it works, 7 business model, 8 competition and market, 9 team, 10 traction and projection, 11 ask and close. New patch plan D0 to D5. QR only on slides 1 and 11 (company website). New open item U13 (one line per routing tier).
+- **Rules (`src/deck/rules.ts`):** `TOTAL_SLIDES` 11; text floor 22 px (was 30); headline up to 12 words (was 8); word budgets 40 to 85 per slide; slide 9 (team) is the one that needs U1; `SLIDE_OPTIONAL` remapped.
+- **Design system (`src/deck/theme.ts`, `Txt.tsx`, `kit.tsx`, `deckFonts.tsx`):** paper-and-ink editorial look. Newsreader (serif) plus JetBrains Mono; crimson accent for one thing per slide, cobalt for data. Eight type presets (`cover`, `display`, `headline`, `sub`, `body`, `label`, `caption`, `code`). `Slide` takes `theme="paper" | "ink"` and a section `tag` (drawn as "§ NN · tag"); new `Card`, `Stat`, `Pill`; `Pin` redesigned. Tones follow the theme through context.
+- **Fonts:** four Newsreader woff2 files added to `public/fonts/` (SIL Open Font License 1.1, from `@fontsource/newsreader`, not added as a dependency). Loaded offline with the FontFace API.
+- **Data:** `words.ts` rewritten for the 11-slide plan (all slides, so Pending frames and word checks cover the whole plan); `shots.ts` slide numbers updated and `CROPS` added (`splashLogo`, `chatPrompt`, `chatExchange`); `inputs.ts` gets both founders' LinkedIn URLs and `tierNotes` (U13, null).
+- **Slides:** `S01` (ink cover: splash glow, title, four verified numerals, founders, QR to `https://www.wearenext.tech/`) and `S02` (real prompt and answer with two pins, five "still needs" cards, "Then what?").
+- **Scripts:** `check-deck.mjs` no longer flags CSS strings such as `radial-gradient(...)`, or product words such as "3D", as typed numbers.
+
+### Verified (sandbox)
+`tsc --noEmit`, `npm run deck:check` (including the PDF checks) and `npm run deck` pass; both slides were rendered and looked at. Not verified: slides 3 to 11 (not built yet; their words and budgets pass the checks), the Studio by eye.
+
+### Notes
+- The first D1 patch must not be applied. If it already was, `git revert` it before applying this one.
+- Word counts: slide 1 is 31 of 40, slide 2 is 66 of 70.
+- The tier descriptions on slide 6 are left to the founders (U13): the repo only proves the tier names.
