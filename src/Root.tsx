@@ -9,6 +9,9 @@ import {DEV_PANEL_FRAMES, DevPanel} from './dev/DevPanel';
 import {DEV_SHELL_FRAMES, DevShell} from './dev/DevShell';
 import {MiniMePromo} from './MiniMePromo';
 import {PreviewScale} from './PreviewScale';
+import {Deck} from './deck/Deck';
+import {DevCrop} from './deck/DevCrop';
+import {TOTAL_SLIDES} from './deck/rules';
 import {FPS, STAGE, TOTAL_FRAMES} from './config/timeline';
 
 /** Same timeline as MiniMePromo, rendered at half size for fast iteration. */
@@ -38,6 +41,16 @@ export const RemotionRoot: React.FC = () => {
         fps={FPS}
         width={STAGE.width / 2}
         height={STAGE.height / 2}
+      />
+
+      {/* The pitch deck (docs/guide/PITCH_DECK_PATCHES.md): slide N is frame N-1. Export with `npm run deck`. */}
+      <Composition
+        id="MiniMeDeck"
+        component={Deck}
+        durationInFrames={TOTAL_SLIDES}
+        fps={FPS}
+        width={STAGE.width}
+        height={STAGE.height}
       />
 
       {/*
@@ -97,6 +110,15 @@ export const RemotionRoot: React.FC = () => {
         fps={FPS}
         width={STAGE.width}
         height={STAGE.height}
+      />
+      {/* Deck dev sheet: proves the screenshot base crop (src/deck/DevCrop.tsx). Not exported. */}
+      <Composition
+        id="DeckDevCrop"
+        component={DevCrop}
+        durationInFrames={1}
+        fps={FPS}
+        width={STAGE.width}
+        height={1140}
       />
       <Composition
         id="DevApp"

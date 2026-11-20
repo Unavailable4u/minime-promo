@@ -18,17 +18,24 @@
     "render:frames": "node scripts/render.mjs --frames",
     "render:all": "node scripts/render.mjs --all",
     "short": "node scripts/make-short.mjs",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "deck": "node scripts/make-deck.mjs",
+    "deck:check": "node scripts/check-deck.mjs"
   },
   "dependencies": {
+    "@remotion/bundler": "4.0.539",
     "@remotion/cli": "4.0.539",
     "@remotion/google-fonts": "4.0.539",
+    "@remotion/renderer": "4.0.539",
     "lucide-react": "^1.64.0",
+    "pdf-lib": "1.17.1",
+    "qrcode": "1.5.4",
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "remotion": "4.0.539"
   },
   "devDependencies": {
+    "@types/qrcode": "1.5.6",
     "@types/react": "^18.3.30",
     "typescript": "~5.9.3"
   }

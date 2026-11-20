@@ -1220,3 +1220,53 @@ Outputs in `out/`: `minime-chat-promo-1080p30.mp4`, `poster.png`, `preview.gif`,
 - Run `npm run check`, open every still and the contact sheet, then do one full `npm run render` on the target Windows machine; the first full render is the real test of memory (`--concurrency`) and of the GIF size.
 - If a different poster is wanted, pass `--poster-frame=N`; the clean end-card hold is f1816-1839.
 - Do not switch the video render back to JPEG without fixing the `yuvj420p` tagging.
+
+---
+
+## PATCH D0 — Pitch deck scaffold (no slides yet)
+
+Guide: `docs/guide/PITCH_DECK_PATCHES.md`. The deck is ONE Remotion composition, `MiniMeDeck` (15 frames, 1920x1080, 30 fps): slide N is frame N-1. The two film compositions are untouched.
+
+### Files created / changed
+```
+CREATED  src/deck/theme.ts  Txt.tsx  kit.tsx  Shot.tsx  shots.ts  Qr.tsx  facts.ts  words.ts  rules.ts  Deck.tsx  DevCrop.tsx
+CREATED  src/deck/data/inputs.ts          src/deck/slides/.gitkeep
+CREATED  scripts/make-deck.mjs  scripts/check-deck.mjs  scripts/lib/deck-data.mjs
+CREATED  public/deck/people/{shuaib-islam,shaikh-muhammad}.{jpg,webp}
+CHANGED  src/Root.tsx   (+ MiniMeDeck, + dev-only DeckDevCrop)
+CHANGED  package.json / package-lock.json   (+ scripts `deck`, `deck:check`; + @remotion/bundler 4.0.539, @remotion/renderer 4.0.539, pdf-lib 1.17.1, qrcode 1.5.4, dev @types/qrcode 1.5.6; all exact)
+CHANGED  docs/guide/PITCH_DECK_PATCHES.md   (U3/U4 and QR targets, D0 status), docs/PATCH_NOTES.md
+```
+
+### Public API
+- **theme.ts**: `CANVAS`, `CONTENT {x96,y72,1728x920}`, `COLORS`, `TYPE {display 200, headline 76, sub 40, body 32}`, `FRAME`, `FOOTER`, `QR`, `PIN`. Colours come from `src/config/theme.ts`.
+- **Txt.tsx**: `<Txt size="display|headline|sub|body" tone="primary|secondary|muted|accent">` (`style` cannot set fontSize, family, weight, colour, lineHeight), `<Accent>`.
+- **kit.tsx**: `<Slide n backdrop? footer? contentStyle?>`, `<Footer n>` (grey logo, "n / 15"), `<Pin n x y label? side?>`, `<Numeral value label? tone?>`, `<Badge>`.
+- **Shot.tsx**: `<Shot id width crop? grid? maxScale? frame?>` + children overlay, `mapPoint({x,y}, {id,width,crop?})` (source px -> displayed px), `shotLayout`. Never upscales past 1.0 unless `maxScale` is raised on purpose. The crop is CSS only.
+- **shots.ts**: `SHOTS` (catalogue 5.2), `BASE_CROP {0,116,1838,964}`, `FORBIDDEN_SHOTS` (`tokens` is deliberately NOT a `ShotId`).
+- **Qr.tsx**: `<Qr text size?>`, `<QrBlock text size? printed?>` (tile + printed short URL), `shortUrl()`, `qrSide()`. Error correction M, 4-module quiet zone, tile >= 280 px, whole pixels per module.
+- **facts.ts**: `FACTS` rows `{id, value, source, status}`, `fact(id)` and `facts.<id>` (unknown id throws), `qualifier(id)` ("target" / "plan" / null), `formatNumber/formatShort/formatUsd`.
+- **words.ts**: `WORDS[slide] = {headline, lines, labels, graphic, notes}`, `text(n)` (resolved), `wordCount(n, extra?)`, `headlineWords`, `resolve`. Numbers are `{fact.path}` tokens, never typed.
+- **rules.ts**: `TOTAL_SLIDES`, `WORD_BUDGET`, `BANNED_WORDS`, `SLIDE_NEEDS` (slide 11 needs `founders`), `SLIDE_OPTIONAL`, `PDF_MAX_BYTES` (9,000,000), `JPEG_QUALITY_STEPS` (90, 82, 75), `missingNeeds()`.
+- **Deck.tsx**: `BUILT` map between `// BUILT:START` / `// BUILT:END`, one `N: SNN,` per line (the scripts parse it); `Pending` placeholder in the Studio.
+
+### Commands
+- `npm run deck [-- --only=3,5 --scale=2 --png --browser-executable=PATH --gl=swangle --keep-bundle]`: stills `out/deck/NN.jpg` and `out/deck/MiniMe-deck.pdf` (`--only` writes `MiniMe-deck.partial.pdf`; `--png` writes PNG stills and no PDF). Skips unbuilt slides and slides with a missing open item, naming the item. With nothing built it prints a notice and exits 0.
+- `npm run deck:check [-- --no-pdf]`: the section 10 checks (slide count/registration, font floor, word budgets, typed digits, banned words, "73 agents", facts rows, forbidden shots, null open items, screenshot sizes, photos, pinned deps, and the PDF size/pages/page size if it exists).
+- Crop proof: `npx remotion still src/index.ts DeckDevCrop out/deck-crop-proof.png`.
+
+### Decisions and deviations from the guide
+- **Website, not the Atlas.** MiniMe is not deployed and the Atlas (minimebook) must not be linked. `inputs.companyUrl = https://www.wearenext.tech/` (printed `wearenext.tech`) is the QR target on slides 1, 12, 15; `inputs.liveUrl` stays `null`. Prompts D1/D4/D5 now say `inputs.liveUrl ?? inputs.companyUrl`.
+- **Founders (U1) are partly filled**: S. M. Shuaib Islam Sayad (Co-Founder & CEO), Shaikh Md Abu Ahad (Co-Founder & CTO), photos in `public/deck/people/`. `whyUs` and `linkedin` are `null`.
+- **Photos**: the two `.webp` uploads were JPEG files with a .webp name; they were converted to real WebP. Shuaib's files carried phone EXIF (Samsung model tags): stripped. Shuaib's pictures were downscaled to 1600 px on the long side (shown as a 280 px circle). Shaikh's JPEG is byte-identical to the upload.
+- **`staticFile` + spaces**: the guide says wrap the name in `encodeURI`. Remotion 4.0.539's `staticFile` already encodes each path segment, so `encodeURI` would double-encode (`%2520`). `Shot` passes the raw name; verified by rendering `image copy 2.png`.
+- **Base crop verified** on all thirteen 1920x1080 captures with a pixel scan: taskbar edge at x = 1860, browser bar ends at y = 109, so `{0,116,1838,964}` is safe (7 px / 22 px margin). 01-chat, 02..05, image.png (1856x973) and 06-build (1487x776) are clean captures: crop = whole image. `06-build.png` is 1487x776, not 1857x971.
+- **Word counting**: headline + lines + labels count; `graphic` text (axes, ring names, plan/stage/tier names, units) does not, matching the guide's own per-slide counts. Numerals, symbols and "Apr 2027"-style dates are not words. Slide 11 adds the founders' roles and why-us lines.
+- The footer logo is grey (`FOOTER.logoColor`) so the accent stays for the slide's one key word.
+- Added fact `cap_table` (100 %, status A, the U9 default) so slide 11's "Cap table: 100% founders" has a source.
+- `facts.routing` names Tier 3 "Adaptive" (`TIER_STEP_LABELS`); `TIER_LABELS` in copy.ts and the real UI say "Ultimate Structure". Decide which word the deck uses before D2.
+
+### Verified (sandbox: Linux, Node 22, Chrome headless shell via `--browser-executable --gl=swangle`)
+- `npx tsc --noEmit`, `npm run deck:check` pass on the empty scaffold; `npm run deck` exits 0 with the "nothing to export" notice.
+- With a TEMPORARY test slide (not shipped): full bundle -> still -> PDF in 15 s, 1 page 1920x1080, 175 KB, fonts/screenshot (name with spaces)/Pin/Numeral/Badge/footer rendered; the QR decoded (OpenCV) to `https://www.wearenext.tech/`; the check failed correctly on fontSize 24, a typed number, a banned word and "73 agents"; slide 11 was skipped with "missing U1 founders" when `founders` was null.
+- NOT run: a full 15-slide export, the Studio by eye, `--scale=2`, `--png`, the 82/75 quality steps (nothing was over 9 MB).

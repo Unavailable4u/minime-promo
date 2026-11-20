@@ -67,10 +67,10 @@ Put the answers in `src/deck/data/inputs.ts` (created in D0, every field starts 
 
 | Id | What | Used on | If left empty |
 |---|---|---|---|
-| U1 | Both founders: name, role, one-line "why us", LinkedIn, **your own photo** | 11, 15 | Slide 11 cannot be built. The export script stops. |
+| U1 | Both founders: name, role, one-line "why us", LinkedIn, **your own photo** | 11, 15 | Slide 11 cannot be built. The export script skips it. **D0 status: names, roles and photos are filled (`public/deck/people/`); "why us" and LinkedIn are still `null`, so those lines are left out until supplied.** |
 | U2 | Contact email | 15 | Omitted |
-| U3 | Live app URL, if anyone outside your machine can use it today | 1, 12 | QR points to the Atlas instead, and slide 12 says "pre-launch" |
-| U4 | Atlas URL. Known: `https://minimebook.vercel.app/` | 1, 12, 15 | Uses the known URL |
+| U3 | Live app URL, if anyone outside your machine can use it today. **MiniMe is not deployed yet: `null`.** | 1, 12, 15 | QR points to the company website (U4), and slide 12 says "pre-launch" |
+| U4 | **Changed in D0:** the company website, `https://www.wearenext.tech/` (printed as `wearenext.tech`). The MiniMe Atlas / `minimebook` site and repo are **not linked anywhere in the deck.** | 1, 12, 15 | Uses the known URL |
 | U5 | Market numbers, each with a source you can name (for example the number of students, developers or startups in Bangladesh, and in South Asia) | 10 | Slide 10 shows the beachhead and expansion path without numbers |
 | U6 | Advisors or mentors, if any | 11 | "Seeking: product and pricing mentors" |
 | U7 | Real testers, quotes, waitlist count, anything a user actually did | 12 | Omitted |
@@ -178,7 +178,7 @@ Format: SSTTAPI part, headline (8 words or fewer), visual, word budget (all visi
 **1. Cover** (opening)
 - Headline: "From a rough idea to a finished build."
 - Sub: "One AI workspace, start to finish."
-- Visual: `splash` logo glow as the ground, MiniMe wordmark, QR (U3 if present, else Atlas) with the printed short URL.
+- Visual: `splash` logo glow as the ground, MiniMe wordmark, QR (U3 if present, else the company website U4) with the printed short URL.
 - Small line (30 px): "Next Inc. Two founders. Rajshahi, Bangladesh."
 - Words: 20. Facts: promise, company.
 - Say: "We are building the AI that does not forget your project halfway through."
@@ -242,7 +242,7 @@ Format: SSTTAPI part, headline (8 words or fewer), visual, word budget (all visi
 
 **12. Traction, honest** (Traction)
 - Headline: "Built before we sell."
-- Visual: a mosaic of three small real shots (`chat`, `blueprint`, `build`) and a row of display numerals: "11" tabs, "59" agents, "3" products. Badge: "Pre-launch". QR to the live app (U3) or the Atlas, with the printed URL.
+- Visual: a mosaic of three small real shots (`chat`, `blueprint`, `build`) and a row of display numerals: "11" tabs, "59" agents, "3" products. Badge: "Pre-launch". QR to the live app (U3) if set, else the company website (U4), with the printed URL.
 - Add U7 and U8 items only if you supplied them.
 - Words: 16. Facts: tabs, agents, products.
 
@@ -259,7 +259,7 @@ Format: SSTTAPI part, headline (8 words or fewer), visual, word budget (all visi
 
 **15. Impact and close, the story ends** (Impact)
 - Headline: "Idea in. Build plan out."
-- Visual: a three-step strip of real shots from the same plant-monitor project: the prompt (`prd`), the architecture (`arch`), the 3D blueprint (`blueprint`). Below: QR codes with printed URLs for the Atlas and the live app (if U3), plus the contact email (U2) and founder LinkedIns (U1).
+- Visual: a three-step strip of real shots from the same plant-monitor project: the prompt (`prd`), the architecture (`arch`), the 3D blueprint (`blueprint`). Below: QR code with printed URL for the company website (U4), plus the live app (if U3), plus the contact email (U2) and founder LinkedIns (U1).
 - Goal line (target, not achieved): "Goal: 1,200 builders in 6 months."
 - Words: 20. Do not claim impact that has not happened.
 
@@ -298,8 +298,8 @@ scripts/check-deck.mjs   the checks in section 10
 
 | Patch | Slides | New code | Needs from you | Status |
 |---|---|---|---|---|
-| D0 | none (scaffold) | theme, `Txt`, kit, `Shot`, `shots.ts`, `Qr`, `facts.ts`, `words.ts`, `inputs.ts`, `Deck.tsx` with all 15 pending, `make-deck.mjs`, `check-deck.mjs`, composition | Nothing. Fill section 2 any time | |
-| D1 | 1 cover, 2 problem | `Qr` proof, hero text layout | U3/U4 (QR target) | |
+| D0 | none (scaffold) | theme, `Txt`, kit, `Shot`, `shots.ts`, `Qr`, `facts.ts`, `words.ts`, `inputs.ts`, `Deck.tsx` with all 15 pending, `make-deck.mjs`, `check-deck.mjs`, composition | Nothing. Fill section 2 any time | **Done** |
+| D1 | 1 cover, 2 problem | `Qr` proof, hero text layout | None (U4 is set; U3 stays empty until MiniMe is deployed) | |
 | D2 | 3, 4, 5, 6, 7 | multi-shot layouts, `Pin` routing slide, numerals | Optional re-capture (5.3) | |
 | D3 | 8, 9, 10 | pricing columns, positioning map, ring diagram | U5, U11 (optional) | |
 | D4 | 11, 12, 13 | team layout, traction mosaic, bar chart | **U1 (required)**, U6 to U8 | |
@@ -317,7 +317,7 @@ Start every prompt with: "Read `docs/PATCH_NOTES.md` and `docs/guide/PITCH_DECK_
 
 ### D1 prompt: slides 1 and 2
 
-> Build slides 1 and 2 per section 6. Slide 1: `splash` as the ground (crop to the logo, darken to 35 percent), wordmark, the headline and sub from `words.ts`, a 280 px QR with its printed URL (use `inputs.liveUrl ?? facts.atlasUrl`), and the small company line. Slide 2: the drone prompt bubble from `chat` cropped and enlarged as the whole slide, "Then what?" in accent under it. No bullets, 14 words at most. Add both to `BUILT`. Run `npm run deck:check` and `npm run deck`. Report the PDF size and the word counts.
+> Build slides 1 and 2 per section 6. Slide 1: `splash` as the ground (crop to the logo, darken to 35 percent), wordmark, the headline and sub from `words.ts`, a 280 px QR with its printed URL (use `inputs.liveUrl ?? inputs.companyUrl`), and the small company line. Slide 2: the drone prompt bubble from `chat` cropped and enlarged as the whole slide, "Then what?" in accent under it. No bullets, 14 words at most. Add both to `BUILT`. Run `npm run deck:check` and `npm run deck`. Report the PDF size and the word counts.
 
 ### D2 prompt: slides 3 to 7
 
@@ -333,7 +333,7 @@ Start every prompt with: "Read `docs/PATCH_NOTES.md` and `docs/guide/PITCH_DECK_
 
 ### D5 prompt: slides 14, 15 and export
 
-> Build slides 14 and 15 per section 6. Slide 14: stacked bar of `facts.capital` parts (225, 2,553, 850) with a total of $3,628, the three "From the Sprint" words from `inputs.sprintAsk ?? defaults`, the bottom line from `words.ts`. Slide 15: three-step strip of `prd`, `arch`, `blueprint`; QR codes for the Atlas and (if set) the live app; contact email and founder LinkedIns from `inputs`; the goal line labelled as a goal. Then finish the export: add pdf-lib link annotations over each QR and printed URL (a `LINKS` map of slide, rect, url) so the links are also clickable in a PDF viewer, keep the flat JPEG pages. Run `npm run deck:check` and `npm run deck`, then fix anything that fails. Output the final PDF size, page count, and the word count per slide.
+> Build slides 14 and 15 per section 6. Slide 14: stacked bar of `facts.capital` parts (225, 2,553, 850) with a total of $3,628, the three "From the Sprint" words from `inputs.sprintAsk ?? defaults`, the bottom line from `words.ts`. Slide 15: three-step strip of `prd`, `arch`, `blueprint`; a QR code for the company website (`inputs.companyUrl`) and, if set, the live app; contact email and founder LinkedIns from `inputs`; the goal line labelled as a goal. Then finish the export: add pdf-lib link annotations over each QR and printed URL (a `LINKS` map of slide, rect, url) so the links are also clickable in a PDF viewer, keep the flat JPEG pages. Run `npm run deck:check` and `npm run deck`, then fix anything that fails. Output the final PDF size, page count, and the word count per slide.
 
 ---
 
