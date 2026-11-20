@@ -2,7 +2,7 @@
  * MiniMe pitch deck — design tokens (guide v2, section 4).
  *
  * v2 look (reset in D1 after review): an editorial "paper and ink" deck in the spirit of the MiniLocker deck and the five
- * reference templates: warm paper pages with a faint grid, a serif for headlines and body, a mono face for labels and
+ * reference templates: warm paper pages with soft colour washes (no grid), a serif for headlines and body, a mono face for labels and
  * captions, dark framed screenshots with numbered pins, big serif numerals, and two bookend slides (cover, close) on ink.
  * It does NOT have to match the MiniMe app's dark crimson look; the screenshots bring that, the pages around them are neutral.
  *

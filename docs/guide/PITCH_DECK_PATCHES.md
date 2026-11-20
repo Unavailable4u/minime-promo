@@ -38,7 +38,7 @@ These come from the SSTTAPI framework (Adnan Dewan), the founders' verdicts on t
 | R8 | Start with a story and end with it: slide 2 opens it, slide 11 closes it. Slides 1 and 11 are on ink, the rest on paper (bookends). | SSTTAPI |
 | R9 | Word budget per slide (section 6), counted by `scripts/check-deck.mjs` from `src/deck/words.ts`. Headline 12 words or fewer, two lines at most. | founders |
 | R10 | Secret Sauce block (slides 2 to 6): 1 problem slide, 3 solution slides (3 to 5), 1 process slide (6). Business model, competition and market, team, traction and projection, and the ask follow (7 to 11). | founders' verdicts 2 and 3 |
-| R11 | Links are QR codes plus a short printed URL. QR on slides 1 and 11, pointing to the **company website**. | founders |
+| R11 | Links are QR codes plus a short printed URL. One QR, on slide 11 (the close), pointing to the **company website**. The cover has none. | founders |
 | R12 | The PDF is 10 MB or less. The script embeds JPEG pages and steps quality down until it is at most 9.0 MB. | form |
 
 ### 1.2 Honesty rules
@@ -70,7 +70,7 @@ Put the answers in `src/deck/data/inputs.ts`. A slide that needs a `null` item u
 |---|---|---|---|
 | U1 | Both founders: name, role, one-line "why us", LinkedIn, **own photo**. **Status: names, roles, photos and LinkedIn URLs are filled; "why us" is still `null`.** | 1, 9, 11 | Slide 9 cannot be built (the export skips it). A `null` "why us" is left out. |
 | U2 | Contact email | 11 | Omitted |
-| U3 | Live app URL, if anyone outside your machine can use it today. **MiniMe is not deployed yet: `null`.** | 1, 10, 11 | QR points to the company website, and slide 10 says "pre-launch" |
+| U3 | Live app URL, if anyone outside your machine can use it today. **MiniMe is not deployed yet: `null`.** | 10, 11 | QR on slide 11 points to the company website, and slide 10 says "pre-launch" |
 | U4 | The company website: `https://www.wearenext.tech/` (printed `wearenext.tech`). The MiniMe Atlas / `minimebook` site and repo are **not linked anywhere in the deck.** | 1, 11 | Known value |
 | U5 | Market numbers, each with a source you can name (students, developers or startups in Bangladesh and South Asia) | 8 | The three rings show without numbers |
 | U6 | Advisors or mentors, if any | 9 | "Seeking: product and pricing mentors" |
@@ -105,7 +105,7 @@ Sources are files in the `minime_book` repo unless noted. (The Atlas site and re
 | mrr | MRR $307 / $920 / $8,235 / $44,700 at month 6 / 12 / 24 / 36. ARR at month 36 $536.4k | rulebook section 9.2 | T |
 | pnl | Revenue year 1 / 2 / 3: $5,058 / $53,304 / $335,840. Year 3 gross margin 64.0 percent. Gross margin month 6 / 12 / 36: 43 / 31 / 65 percent | rulebook sections 9.2 to 9.3 | T |
 | ebitda | Plan A (governed spend) EBITDA: year 1 -$97, year 2 +$12,824, year 3 +$127,900 | rulebook section 9.3 | T |
-| capital | Pre-launch capital $3,628 = Foundation $225 + Pilot and launch prep $2,553 + Launch $850. Working buffer $1,500 | rulebook section 11.2, 9.5 | A |
+| capital | Pre-launch capital plan $7,000 (founders' decision: above the financial plan's best overall cost of about $5.5k, because costs may rise) = Foundation $300 + Pilot and launch prep $3,000 + Launch $1,200 + Working buffer $2,500. The rulebook figures behind it: $225 + $2,553 + $850 = $3,628, plus the $1,500 buffer | founders' decision; rulebook section 11.2, 9.5 | A |
 | external | Outside money needed: Plan A about $4.2k (deepest gap, month 6). Plan B (accelerated hiring) about $27.9k | rulebook section 9.5 | T |
 | timeline | Foundation Sep 2026 to Jun 2027, pilot Jul to Dec 2027, public launch month 1 = Jan 2028 (illustrative dates; launch is demand-gated) | rulebook section 11.1 | A |
 | promise | Landing headline: "From a rough idea to a finished build, carried by one AI, start to finish." | screenshot `image.png` | V |
@@ -123,7 +123,7 @@ Colours, type and spacing live in `src/deck/theme.ts` (not in the film's theme).
 | Token | Value |
 |---|---|
 | Canvas | 1920 x 1080. Content box starts at (96, 72), size 1728 x 920. Footer rule at y = 1016. |
-| Paper page | `#F2EFE8` with a 48 px grid at 4.5 percent and two soft washes (crimson top left, cobalt top right) |
+| Paper page | `#F2EFE8` with two soft washes (crimson top left, cobalt top right); no grid |
 | Ink page (cover and close) | `#0D0D11` |
 | Card | `#FBF9F4` on paper (`#17171D` on ink), hairline `#DCD5C6`, radius 18, soft shadow |
 | Text (paper) | ink `#15161B`, secondary `#4B4B53`, muted `#7C7B80` |
@@ -193,7 +193,7 @@ Format: section, headline (12 words or fewer), layout, what is on it, word budge
 
 ### Slide 1. Cover (ink) · built in D1
 - **Headline:** "From a rough idea to a finished build." Subline (italic): "One AI workspace, start to finish." Pill: "Pre-launch".
-- **Layout:** wordmark top left, "Next Inc · Pre-Seed · Rajshahi, Bangladesh" top right (mono); real splash logo glow on the right; four serif numerals (11 workspace tabs, 59 specialist agents, 46 agent roles, 4 routing tiers) with mono captions; founders' names and roles; QR tile bottom right with the printed URL (`inputs.liveUrl ?? inputs.companyUrl`).
+- **Layout:** wordmark top left, "Next Inc · Pre-Seed · Rajshahi, Bangladesh" top right (mono); real splash logo glow on the right; four serif numerals (11 workspace tabs, 59 specialist agents, 46 agent roles, 4 routing tiers) with mono captions; founders' names and roles. No QR on the cover (the only QR is on slide 11).
 - **Budget:** 40. **Facts:** company, tabs, agents, routing. **Say:** "We are building the AI that does not forget your project halfway through."
 
 ### Slide 2. Problem, the story (paper) · built in D1
@@ -232,18 +232,18 @@ Format: section, headline (12 words or fewer), layout, what is on it, word budge
 - **Budget:** 80. **Honest note (speaker):** the moat is early; the defensible part is the persistent workspace and routing, not any one model.
 
 ### Slide 9. Team (paper) · D4 · needs U1
-- **Headline:** "Two builders, three products, one account."
-- **Layout:** two large founder cards (own photo, name in serif 48, role in mono, why-us line and printed LinkedIn path), then three product cards (MiniMe web workspace, M2C coding agent for terminal and editor, Menux personal automation agent); a strip with "Cap table: 100% founders." and "Seeking: product and pricing mentors." (or U6, U9).
+- **Headline:** "Two builders, one product: MiniMe."
+- **Layout:** two large founder cards (own photo, name in serif 48, role in mono, why-us line and printed LinkedIn path), then a strip (no other product is named: M2C and Menux come later and stay out of the deck) with "Cap table: 100% founders." and "Seeking: product and pricing mentors." (or U6, U9).
 - **Budget:** 65.
 
 ### Slide 10. Traction and projection (paper) · D4
 - **Headline:** "Built before we sell, with targets we can test."
-- **Layout:** left, "What exists today": a mosaic of real shots (`blueprint`, `roles`, `build`) and numerals (11 tabs, 59 specialist agents, 3 products) with the "Pre-launch" pill; U7 and U8 only if supplied. Right, "Targets, unvalidated": bars for MRR at months 6, 12, 24 and 36 (facts.mrr) with paid users and registered builders under each month (facts.funnel); "Targets, not forecasts."
+- **Layout:** left, "What exists today": a mosaic of real shots (`blueprint`, `roles`, `build`) and numerals (11 tabs, 59 specialist agents) with the "Pre-launch" pill; U7 and U8 only if supplied. Right, "Targets, unvalidated": bars for MRR at months 6, 12, 24 and 36 (facts.mrr) with paid users and registered builders under each month (facts.funnel); "Targets, not forecasts."
 - **Budget:** 75. **H4:** no user or revenue claim anywhere.
 
 ### Slide 11. Ask and close (ink) · D4
 - **Headline:** "Idea in, build plan out. Help us reach launch."
-- **Layout:** left, "From the Sprint:" mentors, pilot users, pricing feedback (U12); the pre-launch capital as a stacked bar (facts.capital: Foundation, Pilot and launch prep, Launch) with "Plan A self-funds after about $4.2k. Grant / seed-fund pilot planned for Apr 2027."; middle, the closing story: three small shots (`prd`, `arch`, `blueprint`) joined by arrows; the goal line "Goal: 1,200 builders in 6 months."; right, QR tile with the printed website URL, LinkedIn paths, email if U2.
+- **Layout:** left, "From the Sprint:" mentors, pilot users, pricing feedback (U12); the pre-launch capital plan as a stacked bar (facts.capital: Foundation, Pilot and launch prep, Launch, Working buffer; rounded). No funding route (self-funding, grants, seed funds) is printed; middle, the closing story: three small shots (`prd`, `arch`, `blueprint`) joined by arrows; the goal line "Goal: 1,200 builders in 6 months."; right, QR tile with the printed website URL, LinkedIn paths, email if U2.
 - **Budget:** 85. **Say:** "The Sprint is free and takes no equity. This is not a funding ask to INSEAD. The capital is the cost of getting to launch."
 
 ---
@@ -266,7 +266,7 @@ Format: section, headline (12 words or fewer), layout, what is on it, word budge
 | D1 | 1 cover, 2 problem | **v2 reset:** new design system (paper and ink, Newsreader and JetBrains Mono), 11-slide plan, this guide, rules and word budgets, slides 1 and 2 | nothing | **Done** |
 | D2 | 3, 4, 5 (solution) | landing and nav annotation, idea-to-plan grid, build-test-grow columns | optional re-capture (5.3) | **Done** |
 | D3 | 6, 7, 8 (process, business, competition and market) | routing graph with pins, plan cards and gross-profit bars, positioning map and rings | U13, U5, U11 (all optional) **Done** |
-| D4 | 9, 10, 11 (team, traction and projection, ask and close) | founder cards, MRR bars, capital bar, closing QR | U1 why-us lines, U2, U6 to U10, U12 | |
+| D4 | 9, 10, 11 (team, traction and projection, ask and close) | founder cards, MRR bars, capital bar, closing QR | U1 why-us lines, U2, U6 to U10, U12 (all optional) | **Done** |
 | D5 | none | export polish, speaker notes check, final QA, PDF size | nothing | |
 
 ---

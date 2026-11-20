@@ -31,7 +31,7 @@ export const WORDS: Readonly<Record<number, SlideWords>> = {
   1: {
     headline: 'From a rough idea to a finished build.',
     lines: ['One AI workspace, start to finish.'],
-    labels: ['{company.name} · {company.stage} · {company.city}, {company.country}', 'workspace tabs', 'specialist agents', 'agent roles', 'routing tiers', 'Pre-launch', 'Scan to visit'],
+    labels: ['{company.name} · {company.stage} · {company.city}, {company.country}', 'workspace tabs', 'specialist agents', 'agent roles', 'routing tiers', 'Pre-launch'],
     graphic: [],
     notes: 'We are building the AI that does not forget your project halfway through.',
   },
@@ -156,33 +156,38 @@ export const WORDS: Readonly<Record<number, SlideWords>> = {
     notes:
       'Honest note for the founders: the moat is early. The defensible part is the persistent workspace and routing, not any one model.',
   },
-  // 9. Team. Names, roles, why-us lines, LinkedIn and photos come from data/inputs.ts (U1). Product names come from facts.products.
+  // 9. Team. Names, roles, why-us lines, LinkedIn and photos come from data/inputs.ts (U1). Only MiniMe is named: the other products are not part of this deck.
+  // lines: [0] cap table default (U9 replaces it), [1] "Seeking" default (U6 replaces it). graphic: [0] section tag, [1] the cap table
+  // label printed before a U9 split, [2] the "Seeking" label printed before U6 advisors.
   9: {
-    headline: 'Two builders, three products, one account.',
+    headline: 'Two builders, one product: MiniMe.',
     lines: ['Cap table: {cap_table.foundersPct}% founders.', 'Seeking: product and pricing mentors.'],
     labels: [],
-    graphic: ['The team'],
-    notes: '',
+    graphic: ['The team', 'Cap table:', 'Seeking:'],
+    notes: 'Two founders are building MiniMe. We are looking for mentors on product and pricing.',
   },
-  // 10. Traction (honest) and projection (targets)
+  // 10. Traction (honest) and projection (targets). labels: [0] "What exists today", [1..2] captions of the two numerals, [3] the head of
+  // the bars (status T: "unvalidated"), [4] and [5] the row names under the months. graphic: [0] section tag, [1] "Month" (before 6, 12, 24,
+  // 36), [2] the pill, [3] the row name of the MRR bars.
   10: {
     headline: 'Built before we sell, with targets we can test.',
     lines: ['Pre-launch: nothing here is a user count.', 'Targets, not forecasts.'],
-    labels: ['What exists today', 'tabs', 'specialist agents', 'products', 'Targets, unvalidated', 'paid users', 'registered builders'],
-    graphic: ['Where we are, where we aim', 'Month'],
-    notes: '',
+    labels: ['What exists today', 'tabs', 'specialist agents', 'Targets, unvalidated', 'paid users', 'registered builders'],
+    graphic: ['Where we are, where we aim', 'Month', 'Pre-launch', 'MRR target'],
+    notes: 'Everything on the left exists today and is shown from the real product. Everything on the right is a target we can test, not a forecast. We have no users and no revenue yet.',
   },
-  // 11. Ask and close (ink): the story ends where it began.
+  // 11. Ask and close (ink): the story ends where it began. lines: [0] head of the Sprint asks, [1] the three asks (U12 replaces them; split
+  // at the full stops), [2] the goal line. graphic: [0] section tag, [1] head of the capital bar (status A: "plan"), [2..4] captions of
+  // the three story shots (PRD, architecture, blueprint). No funding route (self-funding, grants, seed funds) is written on this slide.
   11: {
     headline: 'Idea in, build plan out. Help us reach launch.',
     lines: [
       'From the Sprint:',
       'Mentors. Pilot users. Pricing feedback.',
-      'Plan A self-funds after about ${external.planAUsd:k}. Grant / seed-fund pilot planned for {timeline.grantApplication}.',
       'Goal: {funnel.registered.0} builders in {funnel.months.0} months.',
     ],
     labels: ['Scan to visit'],
-    graphic: ['The ask', 'Pre-launch capital'],
+    graphic: ['The ask', 'Pre-launch capital plan', 'The PRD', 'The architecture', 'The blueprint'],
     notes: 'The Sprint is free and takes no equity. This is not a funding ask to INSEAD. The capital is the cost of getting to launch.',
   },
 };

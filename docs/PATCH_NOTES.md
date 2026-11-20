@@ -1345,3 +1345,49 @@ Built on top of D2. Slides 1 to 8 are now built; 9 to 11 (D4) are not.
 - The positions of the map's dots are the founders' opinion, labelled "Our view."; they are not data. "Code agents" sits just under the midline so its label does not clip the MiniMe quadrant.
 - The "Why now" line (models are cheap enough that a free tier is affordable) is a claim, not a fact from `facts.ts`: confirm it before the deck is sent.
 - Pin leader lines are in the graph's blank area but cross a few overlapping labels; the labels are not meant to be read.
+
+
+---
+
+## PATCH D4 — Team, traction and projection, ask and close (slides 9, 10, 11)
+
+Built on top of D3. All eleven slides are now built.
+
+### What changed
+- **Slide 9, team (`S09`):** two founder cards (round photo, name, role, the "why us" line only when U1 has one, the printed LinkedIn path) and one strip with the cap table (U9 split, else "100% founders") and what we seek (U6 advisors, else "product and pricing mentors"). Needs U1: the export skips it until both founders have name, role and photo (they do today).
+- **Slide 10, traction and projection (`S10`):** left, three real shots (`blueprint`, `build`, `roles`), the numerals 11 tabs and 59 specialist agents, the "Pre-launch" pill, the line that nothing here is a user count (H4), and U7 / U8 lines only when supplied. Right, "Targets, unvalidated": MRR bars for months 6, 12, 24, 36 on one linear scale (so the early months are honestly tiny) with paid users and registered builders under each month. Every number on the right is status T; the head says "unvalidated" and the foot "Targets, not forecasts." (H1).
+- **Slide 11, ask and close (`S11`, ink):** left, what we want from the Sprint (U12, else Mentors, Pilot users, Pricing feedback) and the pre-launch capital as one stacked bar (`facts.capital`, status A, so the head says "plan"); middle, the closing story as three small shots (PRD, architecture, blueprint) joined by arrows and the goal line; right, the QR tile and printed URL (`inputs.liveUrl ?? inputs.companyUrl`); foot, the founders' LinkedIn paths and the contact email (U2) when set.
+- **`kit.tsx`:** new `Portrait` (founder photo as a head-and-shoulders circle, CSS crop only). The framing per photo lives in `PORTRAIT_FRAMES` (face centre and zoom); a new photo gets the default framing until a row is added there.
+- **`shots.ts`:** `CROPS.storyPrd`, `storyArch`, `storyBlueprint` (strips of the same screens as slide 4, about 2.2 : 1 so the three small shots have nearly the same height).
+- **`words.ts`:** slide 9 gets a new headline ("Two builders, one product: MiniMe.") and gains the "Cap table:" and "Seeking:" labels; slide 10 loses the "products" label and gains the "Pre-launch" pill and "MRR target" row name; slide 11 gains the three story captions and the head "Pre-launch capital plan". Speaker notes written for slides 9 and 10 (no numbers; slide 11 already had one).
+- **`Deck.tsx`:** `9: S09, 10: S10, 11: S11` in the BUILT block.
+- **`scripts/check-deck.mjs`:** the founders' role and why-us lines are now added to the word count of slide 9 (where they are drawn); it said slide 11. `scripts/make-deck.mjs`: a comment said slide 11 needs U1, it is slide 9.
+
+### Verified (sandbox: Linux, Node 22, Chrome via `--browser-executable --gl=swangle`)
+`npx tsc --noEmit`, `npm run deck:check` (with the PDF checks) and `npm run deck` pass; the PDF is 11 pages, 1920 x 1080, 2.5 MB. Slides 9, 10 and 11 were rendered and looked at. Word counts: slide 9 is 18 of 65, slide 10 is 32 of 75, slide 11 is 34 of 85. Not verified: the Studio by eye, a phone scan of the QR (D5).
+
+### Notes and open points
+- **Only MiniMe is named (decision of the founders):** M2C and Menux are later products and appear nowhere in D4: no product cards on slide 9, no "three products" in the headline or the numerals of slide 10. `facts.products` is left in `facts.ts` (still true, and guide 1.3 cites it) but no built slide reads it. If another slide or the application text still says "three products", change it the same way.
+- **U1 why-us lines are `null`:** the founder cards show name, role and LinkedIn only. Fill `whyUs` in `data/inputs.ts` to add one line to each card (the card has room; slide 9 is far under its word budget).
+- **U2, U6 to U10, U12 are `null`:** the defaults are shown (no contact email, "product and pricing mentors", "100% founders", no traction or awards, "Grant / seed-fund pilot planned for Apr 2027", the three default asks).
+- **Slide 11 reuses the screens of slide 4 on purpose:** the closing story (PRD, architecture, blueprint) is the output of the prompt that slide 2 opens with. The captions are short; the shots are too small to read, as on slide 4.
+- **Slide 10's bars use one linear scale:** months 6 and 12 are thin lines next to month 36. That is the honest picture of the targets.
+- The word count of slide 11 does not include the founders' names or LinkedIn paths, as on the cover.
+
+### Revision after review (founders' decisions)
+- **No internal funding plan on slide 11.** The line "Plan A self-funds after about $4.2k. Grant / seed-fund pilot planned for Apr 2027." is gone, and with it the U10 seed-fund hook (`seedFundName` is no longer read by a slide and was taken out of `SLIDE_OPTIONAL[11]`; the field stays in `inputs.ts`). `facts.external` and `facts.timeline` stay in `facts.ts` but nothing prints them.
+- **Targets stay exact.** Slide 10 prints the rulebook targets as they are ($307, $920, $8,235, $44,700; paid users 40, 120, 595, 2,720): they follow from the real plan prices, so they read as calculated. (An earlier revision rounded them; the founders reversed it.) The head says "unvalidated" and the foot "Targets, not forecasts." (H1).
+- **Capital plan is higher:** total $7,000 = Foundation $300 + Pilot and launch prep $3,000 + Launch $1,200 + Working buffer $2,500. The founders' financial plan puts the best overall cost to launch at about $5.5k; they want room for costs that rise or go wrong before launch. The rulebook figures behind it are $225 + $2,553 + $850 = $3,628 plus the $1,500 buffer ($5,128): the three parts are rounded up (about 24% headroom on $3,628) and the buffer is raised from $1,500 to $2,500. The head still says "plan" (H1). `facts.capital.workingBufferUsd` became a fourth bar part.
+- **Source of the $7k:** it is the founders' decision, not a rulebook section; `facts.capital.source` says so. The total is theirs; the split of the four parts is a suggestion, so confirm it against the financial plan before the deck is sent. To use $6.5k instead, change the four amounts in `facts.capital` (the total must equal their sum or `deck:check` fails).
+
+---
+
+## PATCH D4.1 — No grid, no QR on the cover
+
+Small follow-up on D4, from the founders' review.
+
+- **No grid on the paper pages.** `Ground` in `kit.tsx` keeps the warm paper colour and the two soft washes (crimson top left, cobalt top right) and drops the two 48 px line gradients. Affects slides 2 to 10; the ink slides (1 and 11) never had a grid.
+- **One QR code, on slide 11.** The cover (`S01`) no longer shows the QR tile, its URL or the "Scan to visit" label (the label is out of `words.ts` slide 1; `liveUrl` is out of `SLIDE_OPTIONAL[1]`). The founders' names and the four numerals stay. The guide (R11, the cover layout, U3, the paper-page row) says the same.
+
+### Verified
+`npx tsc --noEmit` and `npm run deck:check` pass. Slides 1, 2 and 10 were rendered and looked at. Slide 1 is 28 of 40 words.

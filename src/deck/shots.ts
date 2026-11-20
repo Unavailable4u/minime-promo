@@ -178,6 +178,15 @@ export type ShotId = keyof typeof SHOTS;
  *    above it, the chat and the sidebar are out. ROUTING_PINS below marks four nodes of it.
  *  - roleCards (roles): the "coding (5)" group header and its first two rows of role cards (x 462..1387, y 312..742). The top bar
  *    with the account name (y < 110) and the scrollbar (x > 1400) are out (H8).
+ *
+ * Added in D4 (slide 11, the closing story): three wide strips of the same screens slide 4 shows, about 2.2 : 1 so the three small shots
+ * have nearly the same height at the same width.
+ *  - storyPrd (prd): the PRD sub-tab row (PRD highlighted), the end of the parts list, the cost line and the "Block Diagram" heading
+ *    (x 296..1306, y 228..687). The chat panel with the prompt (x > 1336) and the sidebar (x < 282) are out.
+ *  - storyArch (arch): the lower half of the diagram: regulator, ESP32 and the four parts it drives (x 300..1300, y 516..952; it starts below the
+ *    "powers" tag above the regulator so no half-cut label shows, hence 2.3 : 1).
+ *  - storyBlueprint (blueprint): the 3D layout and the start of the parts list (x 300..1315, y 318..779); the sub-tab row and the
+ *    chat panel are out.
  */
 export const CROPS = {
   splashLogo: {x: 463, y: 200, w: 933, h: 525},
@@ -194,6 +203,9 @@ export const CROPS = {
   growthFanout: {x: 290, y: 176, w: 890, h: 698},
   routingGraph: {x: 1362, y: 488, w: 466, h: 444},
   roleCards: {x: 462, y: 312, w: 925, h: 430},
+  storyPrd: {x: 296, y: 228, w: 1010, h: 459},
+  storyArch: {x: 300, y: 516, w: 1000, h: 436},
+  storyBlueprint: {x: 300, y: 318, w: 1015, h: 461},
 } as const satisfies Record<string, Crop>;
 
 /**

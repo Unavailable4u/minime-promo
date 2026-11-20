@@ -1,5 +1,5 @@
 import React from 'react';
-import {AbsoluteFill} from 'remotion';
+import {AbsoluteFill, Img, staticFile} from 'remotion';
 import {BRAND} from '../config/copy';
 import {DeckFonts} from './deckFonts';
 import {Accent, ThemeContext, Txt, useDeckTheme, type Tone} from './Txt';
@@ -29,7 +29,7 @@ export const Footer: React.FC<{n: number; theme: DeckTheme; label: string}> = ({
   );
 };
 
-/** Page ground: warm paper with a faint 48 px grid and two soft colour washes, or flat ink. Pure CSS, no network. */
+/** Page ground: warm paper with two soft colour washes (no grid), or flat ink. Pure CSS, no network. */
 const Ground: React.FC<{theme: DeckTheme}> = ({theme}) =>
   theme === 'paper' ? (
     <AbsoluteFill
@@ -38,10 +38,7 @@ const Ground: React.FC<{theme: DeckTheme}> = ({theme}) =>
         backgroundImage: [
           'radial-gradient(1100px 620px at 0% 0%, rgba(212, 20, 63, 0.07), transparent 62%)',
           'radial-gradient(1000px 560px at 100% 0%, rgba(36, 71, 214, 0.05), transparent 62%)',
-          'linear-gradient(rgba(21, 22, 27, 0.045) 1px, transparent 1px)',
-          'linear-gradient(90deg, rgba(21, 22, 27, 0.045) 1px, transparent 1px)',
         ].join(', '),
-        backgroundSize: 'auto, auto, 48px 48px, 48px 48px',
       }}
     />
   ) : (
@@ -238,6 +235,50 @@ export const ChevronPath: React.FC<{steps: readonly string[]}> = ({steps}) => {
           </ThemeContext.Provider>
         </div>
       ))}
+    </div>
+  );
+};
+
+/**
+ * How each founder photo (public/deck/people/) is framed inside the round portrait: `x`/`y` is the middle of the face as a fraction of
+ * the picture (0..1), `zoom` is the picture's displayed width divided by the circle's diameter (bigger = closer). The face sits 40%
+ * from the top of the circle, so head and shoulders fit. A photo that is not listed uses DEFAULT_PORTRAIT_FRAME: add a row when a
+ * new founder photo is added to data/inputs.ts and look at the slide.
+ */
+const PORTRAIT_FRAMES: Readonly<Record<string, {x: number; y: number; zoom: number}>> = {
+  'shuaib-islam.jpg': {x: 0.49, y: 0.3, zoom: 2.08},
+  'shaikh-muhammad.jpg': {x: 0.455, y: 0.25, zoom: 1.875},
+};
+const DEFAULT_PORTRAIT_FRAME = {x: 0.5, y: 0.27, zoom: 1.9} as const;
+
+/** A founder's photo as a head-and-shoulders circle (the file is never edited; the crop is CSS only). `photo` is a file in public/deck/people/. */
+export const Portrait: React.FC<{photo: string; size: number}> = ({photo, size}) => {
+  const theme = useDeckTheme();
+  const frame = PORTRAIT_FRAMES[photo] ?? DEFAULT_PORTRAIT_FRAME;
+  return (
+    <div
+      style={{
+        position: 'relative',
+        width: size,
+        height: size,
+        flexShrink: 0,
+        borderRadius: '50%',
+        overflow: 'hidden',
+        backgroundColor: SURFACES[theme].line,
+        boxShadow: `0 0 0 4px ${SURFACES[theme].card}, 0 0 0 5px ${SURFACES[theme].line}, ${SURFACES[theme].shadow}`,
+      }}
+    >
+      <Img
+        src={staticFile(`deck/people/${photo}`)}
+        style={{
+          position: 'absolute',
+          left: size / 2,
+          top: size * 0.4,
+          width: size * frame.zoom,
+          maxWidth: 'none',
+          transform: `translate(${-frame.x * 100}%, ${-frame.y * 100}%)`,
+        }}
+      />
     </div>
   );
 };

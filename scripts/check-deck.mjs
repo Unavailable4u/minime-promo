@@ -93,7 +93,7 @@ for (const file of files) {
 // ---- 3. words: budgets, headlines, banned words, typed digits -----------------------------------------------------
 log.step('Words (R9, H6)');
 const extraWords = (slide) =>
-  slide === 11 && inputs.founders ? inputs.founders.flatMap((x) => [x.role, x.whyUs ?? '']).filter(Boolean) : [];
+  slide === 9 && inputs.founders ? inputs.founders.flatMap((x) => [x.role, x.whyUs ?? '']).filter(Boolean) : [];
 for (let n = 1; n <= rules.TOTAL_SLIDES; n += 1) {
   if (!words.WORDS[n]) {
     bad(`words.ts has no entry for slide ${n}.`);

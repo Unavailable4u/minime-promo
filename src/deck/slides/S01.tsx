@@ -3,7 +3,6 @@ import {Pill, Slide, Stat, Wordmark} from '../kit';
 import {Txt} from '../Txt';
 import {Shot} from '../Shot';
 import {CROPS} from '../shots';
-import {QrBlock} from '../Qr';
 import {text} from '../words';
 import {facts} from '../facts';
 import {inputs} from '../data/inputs';
@@ -11,8 +10,8 @@ import {CONTENT} from '../theme';
 
 /**
  * Slide 1, Cover (ink, opening). The real splash screen is the ground on the right (logo and glow, `CROPS.splashLogo`);
- * the left carries the title, the subline and four verified numbers. Bottom right: a QR tile for the live app if it exists
- * (U3), else the company website. Founders' names come from inputs.ts (U1) when set.
+ * the left carries the title, the subline and four verified numbers. Founders' names come from inputs.ts (U1) when set.
+ * No QR code here: the only QR of the deck is on slide 11.
  */
 const Glow: React.FC = () => (
   <Shot
@@ -34,8 +33,7 @@ const Glow: React.FC = () => (
 
 export const S01: React.FC = () => {
   const w = text(1);
-  const [tagline, tabs, agents, roles, tiers, preLaunch, scan] = w.labels;
-  const url = inputs.liveUrl ?? inputs.companyUrl;
+  const [tagline, tabs, agents, roles, tiers, preLaunch] = w.labels;
   return (
     <Slide n={1} theme="ink" backdrop={<Glow />} contentStyle={{justifyContent: 'space-between'}}>
       <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
@@ -77,12 +75,6 @@ export const S01: React.FC = () => {
               ))}
             </div>
           ) : null}
-        </div>
-        <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16}}>
-          <QrBlock text={url} />
-          <Txt size="label" tone="muted">
-            {scan}
-          </Txt>
         </div>
       </div>
     </Slide>

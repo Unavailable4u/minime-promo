@@ -62,12 +62,12 @@ export const SLIDE_NEEDS: Readonly<Record<number, readonly (keyof DeckInputs)[]>
 
 /** Open items a slide may read when present and replaces by a default when null (guide section 2, last column). */
 export const SLIDE_OPTIONAL: Readonly<Record<number, readonly (keyof DeckInputs)[]>> = {
-  1: ['liveUrl', 'founders'],
+  1: ['founders'],
   6: ['tierNotes'],
   8: ['competitors', 'market'],
   9: ['advisors', 'split', 'founders'],
   10: ['liveUrl', 'traction', 'recognition'],
-  11: ['liveUrl', 'contactEmail', 'seedFundName', 'sprintAsk', 'founders'],
+  11: ['liveUrl', 'contactEmail', 'sprintAsk', 'founders'],
 };
 
 /** Which open items (by guide id) each input key stands for, used in skip messages. */

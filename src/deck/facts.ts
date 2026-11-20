@@ -167,15 +167,15 @@ export const FACTS = {
   capital: row(
     'capital',
     {
-      totalUsd: 3628,
+      totalUsd: 7000,
       parts: [
-        {name: 'Foundation', usd: 225},
-        {name: 'Pilot and launch prep', usd: 2553},
-        {name: 'Launch', usd: 850},
+        {name: 'Foundation', usd: 300},
+        {name: 'Pilot and launch prep', usd: 3000},
+        {name: 'Launch', usd: 1200},
+        {name: 'Working buffer', usd: 2500},
       ],
-      workingBufferUsd: 1500,
     },
-    'rulebook section 11.2, 9.5',
+    'founders\' decision: plan for $7k, above their financial plan\'s best overall cost of about $5.5k, because costs may rise before launch. The rulebook (sections 11.2 and 9.5) gives 225 + 2,553 + 850 = 3,628 plus a 1,500 working buffer; the three parts are rounded up (about 24% headroom) and the buffer is enlarged',
     'A',
   ),
   external: row(

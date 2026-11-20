@@ -9,7 +9,7 @@
  *
  * Slide N is frame N-1 of the `MiniMeDeck` composition. The export SKIPS (never renders, never puts in the PDF):
  *   - slides that are not in the BUILT map of src/deck/Deck.tsx yet,
- *   - built slides whose open item is missing (guide section 2; today only slide 11 needs U1), with a line naming the item.
+ *   - built slides whose open item is missing (guide section 2; today only slide 9 needs U1), with a line naming the item.
  *
  * The PDF embeds JPEG pages (pdf-lib embedJpg). JPEG quality steps 90 -> 82 -> 75 until the file is at most
  * PDF_MAX_BYTES (9.0 MB, src/deck/rules.ts); the size is printed. Run `npm run deck:check` afterwards.

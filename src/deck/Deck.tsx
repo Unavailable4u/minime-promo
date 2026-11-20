@@ -15,6 +15,9 @@ import {S05} from './slides/S05';
 import {S06} from './slides/S06';
 import {S07} from './slides/S07';
 import {S08} from './slides/S08';
+import {S09} from './slides/S09';
+import {S10} from './slides/S10';
+import {S11} from './slides/S11';
 
 /**
  * The deck is ONE composition, `MiniMeDeck`: 15 frames, slide N is frame N-1 (guide v2, section 7).
@@ -33,6 +36,9 @@ export const BUILT: Readonly<Record<number, React.FC>> = {
   6: S06,
   7: S07,
   8: S08,
+  9: S09,
+  10: S10,
+  11: S11,
   // BUILT:END
 };
 
